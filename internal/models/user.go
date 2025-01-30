@@ -9,13 +9,16 @@ import (
 
 
 type User struct {
-	ID        		uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
-    FullName      	string    `gorm:"type:varchar(100)" json:"full_name"`
-    Email     		string    `gorm:"type:varchar(100);unique" json:"email"`
-    PhoneNumber     *string   `gorm:"type:varchar(20);index;unique"` 
-    Password  		string    `gorm:"type:varchar(100)" json:"password"`
-    CreatedAt 		time.Time `json:"created_at"`
-    UpdatedAt 		time.Time `json:"updated_at"`
+	ID        		        uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
+    FullName      	        string      `gorm:"type:varchar(100)" json:"fullName"`
+    Email     		        string      `gorm:"type:varchar(100);unique" json:"email"`
+    PhoneNumber             *string     `gorm:"type:varchar(20);index;unique" json:"phoneNumber"` 
+    Password  		        string      `gorm:"type:varchar(100)" json:"-"`
+    RegisterWithGoogle      bool        `gorm:"type:bool" json:"registerWithGoogle"`
+    OtpToken                *string     `gorm:"type:text" json:"-"`
+    IsEmailVerified         bool        `gorm:"type:bool;default:false" json:"isEmailVerified"`
+    CreatedAt 		        time.Time   `json:"createdAt"`
+    UpdatedAt 		        time.Time   `json:"updatedAt"`
 }
 
 

@@ -45,7 +45,7 @@ func main() {
 
 
 	dbCon, err := db.ConnectDB(dbConfig)
-	 
+	
 	if err != nil {
 		log.Fatal("Failed to connect to database ", err)
 	}
@@ -69,6 +69,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Invalid SMTP_PORT:", err)
 	}
+	
 	dialer := gomail.NewDialer(
 		cfg.smtp.host, smtpPort,
 		cfg.smtp.user, cfg.smtp.password,

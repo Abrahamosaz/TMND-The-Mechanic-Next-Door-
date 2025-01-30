@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Abrahamosaz/TMND/internal/db"
+	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,7 +19,7 @@ type application struct {
 	config  	config
 	store  		store.Storage
 	dbConfig 	db.DBConfig
-	smtp    *gomail.Dialer
+	smtp    	*gomail.Dialer
 }
 
 type config struct {
@@ -32,6 +34,13 @@ type smtpConfig struct {
 	password 	string
 	host 		string
 	port 		string
+}
+
+
+type Response struct {
+	Message 	string 			`json:"message"`
+	StatusCode 	int 			`json:"statusCode"`
+	Data  		interface {} 	`json:"data"`
 }
 
 
@@ -54,7 +63,16 @@ func (app *application) mount() http.Handler {
 	// health check
 	router.Route("/api/v1", func(rootRouter chi.Router) {
 		rootRouter.Get("/health", app.healthCheckHandler)
-		rootRouter.Get("/send-email", app.testSendMail)
+		// rootRouter.Get("/send-email", app.testSendMail)
+
+		rootRouter.Route("/auth", func(authRouter chi.Router) {
+			authRouter.Post("/signup", app.signupHandler)
+			authRouter.Post("/login", app.loginHandler)
+			authRouter.Post("/forgot-password", app.forgotPasswordHandler)
+			authRouter.Post("/verify-otp", app.verifyOtpHandler)
+			authRouter.Post("/change-password", app.changePasswordHandlder)
+			authRouter.Post("/verify-ermail", app.verifyEmailHandler)
+		})
 	})
 	
 	return router
@@ -74,4 +92,37 @@ func (app *application) run(mux http.Handler) (error) {
 	log.Printf("Server running on %s", app.config.addr)
 	return srv.ListenAndServe()
 }
+
+
+func (app *application) createNewServiceApp()  services.Application {
+	
+	config := services.Config{
+		Addr: app.config.addr,
+		Smtp: services.SmtpConfig{
+			User: app.config.smtp.user,
+			From: app.config.smtp.from,
+			Password: app.config.smtp.password,
+			Host: app.config.smtp.host,
+			Port: app.config.smtp.port,
+		},
+	}
+
+	return services.Application{
+		Config: config,
+		Store: app.store,
+		DbConfig: app.dbConfig,
+		Smtp: app.smtp,
+	}
+}
+
+func (app *application) responseJSON(statusCode int, w http.ResponseWriter, message string, data interface {}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(Response{
+			Message: message,
+			StatusCode: statusCode,
+			Data: data,
+		})
+}
+
 

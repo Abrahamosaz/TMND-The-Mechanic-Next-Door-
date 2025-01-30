@@ -1,13 +1,16 @@
 package store
 
 import (
+	"github.com/Abrahamosaz/TMND/internal/models"
 	"gorm.io/gorm"
 )
 
 
 type Storage struct {
 	User interface {
-		Create() error
+		Create(models.User) (models.User, *gorm.DB, error)
+		FindByEmail(string) (models.User, error)
+		Save(*models.User) error
 	}
 	Post interface {
 		Create() error
