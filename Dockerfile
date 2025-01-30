@@ -9,13 +9,13 @@ WORKDIR /app
 COPY go.mod go.sum ./
 
 # Copy local code to the container image.
-COPY . ./
+COPY . .
 
 # Install project dependencies
 RUN go mod download
 
-# Build the app
-RUN go build -o app
+# Build the application using the script
+RUN go build -o "./bin/app" cmd/api/*.go
 
-# Run the service on container startup.
-ENTRYPOINT ["./app"]
+# Run the service on container startup
+ENTRYPOINT ["./bin/app"]
