@@ -101,7 +101,7 @@ func (app *application) forgotPasswordHandler(w http.ResponseWriter, r *http.Req
 
 	serviceApp := app.createNewServiceApp()
 
-	statusCode, err := services.ForgotPassword(&serviceApp, forgotPasswordDto)
+	statusCode, err := services.SendOtpCode(&serviceApp, forgotPasswordDto, "forgotPassword")
 
 	if err != nil {
 		log.Println("error login: ", err.Error())
@@ -209,5 +209,39 @@ func (app *application) verifyOtpHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	app.responseJSON(statusCode, w, "Otp code verified successfuly", nil)
+
+}
+
+
+func (app *application) resendOtpHandler(w http.ResponseWriter, r *http.Request) {
+	var resendOtpDto services.Email
+
+	err := json.NewDecoder(r.Body).Decode(&resendOtpDto)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = validate.Struct(resendOtpDto)
+
+	if err != nil {
+		ValidateRequestBody(err, w)
+		return
+	}
+
+	serviceApp := app.createNewServiceApp()
+
+	statusCode, err := services.SendOtpCode(&serviceApp, resendOtpDto, "resendCode")
+
+	if err != nil {
+		log.Println("error resend otp: ", err.Error())
+		message := err.Error()
+		if (statusCode == http.StatusInternalServerError) {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+	app.responseJSON(http.StatusOK, w, "Otp code resent successfully", nil)
 
 }

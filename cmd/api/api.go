@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Abrahamosaz/TMND/internal/db"
+	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -65,14 +66,21 @@ func (app *application) mount() http.Handler {
 		rootRouter.Get("/health", app.healthCheckHandler)
 		// rootRouter.Get("/send-email", app.testSendMail)
 
-		rootRouter.Route("/auth", func(authRouter chi.Router) {
+		rootRouter.Route("/auth", func(authRouter chi.Router) {	
 			authRouter.Post("/signup", app.signupHandler)
 			authRouter.Post("/login", app.loginHandler)
 			authRouter.Post("/forgot-password", app.forgotPasswordHandler)
 			authRouter.Post("/verify-otp", app.verifyOtpHandler)
 			authRouter.Post("/change-password", app.changePasswordHandlder)
-			authRouter.Post("/verify-ermail", app.verifyEmailHandler)
+			authRouter.Post("/resend-otp", app.resendOtpHandler)
+			authRouter.Post("/verify-email", app.verifyEmailHandler)
 		})
+
+
+		rootRouter.Route("/user", func(userRouter chi.Router) {
+			userRouter.Use(app.authMiddleware)
+			userRouter.Get("/get-user", app.getUserHandler)
+		})	
 	})
 	
 	return router
@@ -126,3 +134,7 @@ func (app *application) responseJSON(statusCode int, w http.ResponseWriter, mess
 }
 
 
+func (app *application) GetUserFromContext(r *http.Request) (*models.User, bool) {
+	user, ok := r.Context().Value(userContextKey).(*models.User)
+	return user, ok
+}

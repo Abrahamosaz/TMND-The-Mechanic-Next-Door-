@@ -124,22 +124,25 @@ func LoginUser(app *Application, payload Login) (int, error) {
 		return http.StatusInternalServerError, errors.New("failed to generate jwt token")
 	}
 
+	sendEmail := func(subject string) {
+		if err := app.sendOtpEmail(subject, user.Email, OtpEmailPayload{
+			fullName: user.FullName,
+			otpCode: otpCode,
+		}, "login"); err != nil {
+			log.Println("Error sending email:", err)
+			panic(err)
+		} else {
+			log.Println("Email sent successfully!")
+		}
+	}
 	//update the user token
 	user.OtpToken = &token
 	// check if the user email is verified
 	// send verification email to the user if the email is not verified
 	if !user.IsEmailVerified {
-		go func() {
-			if err := app.sendOtpEmail("Your Account is Almost Ready! Verify Your Email Now.", user.Email, OtpEmailPayload{
-				fullName: user.FullName,
-				otpCode: otpCode,
-			}, "login"); err != nil {
-				log.Println("Error sending email:", err)
-				panic(err)
-			} else {
-				log.Println("Email sent successfully!")
-			}
-		}()
+		go sendEmail("Your Account is Almost Ready! Verify Your Email Now.")
+	} else {
+		go sendEmail("Your One-Time Password (OTP) for Login")	
 	}
 
 	err = app.Store.User.Save(&user)
@@ -153,7 +156,7 @@ func LoginUser(app *Application, payload Login) (int, error) {
 
 
 
-func ForgotPassword(app  *Application, payload Email) (int, error) {
+func SendOtpCode(app  *Application, payload Email, route string) (int, error) {
 	email := payload.Email
 	user, err := app.Store.User.FindByEmail(email)
 
@@ -185,9 +188,8 @@ func ForgotPassword(app  *Application, payload Email) (int, error) {
 
 	//update the user token
 	user.OtpToken = &token
-
-	go func() {
-		if err := app.sendOtpEmail("Reset Your Password", user.Email, OtpEmailPayload{
+	sendEmail := func(subject string) {
+		if err := app.sendOtpEmail(subject, user.Email, OtpEmailPayload{
 			fullName: user.FullName,
 			otpCode: otpCode,
 		}, "forgotPassword"); err != nil {
@@ -196,7 +198,17 @@ func ForgotPassword(app  *Application, payload Email) (int, error) {
 		} else {
 			log.Println("Email sent successfully!")
 		}
-	}()
+	}
+
+	if route == "forgotPassword" {
+		go sendEmail("Reset Your Password")
+	} else {
+		message := "Your New OTP Code for Secure Login"
+		if !user.IsEmailVerified {
+			message = "New OTP Code: Verify Your Email to Complete Registration"
+		}
+		go sendEmail(message)
+	}
 
 	err = app.Store.User.Save(&user)
 
@@ -292,15 +304,53 @@ func VerifyEmail(app *Application, payload VerifyOtp) (VerifyOtpResponse, int, e
 		return VerifyOtpResponse{}, http.StatusBadRequest, errors.New("invalid otp code")
 	}
 
+	type TokenPayload struct {
+		token *string
+		errorMessage error
+	}
+
+	tokenChannel := make(chan TokenPayload)
+
+	go func() {
+		// generate otpCode
+		otpCode, err := utils.GenerateOtpCode(4)
+
+		if err != nil  {
+			tokenChannel <- TokenPayload{nil, errors.New("failed to generate otp code")}
+			return
+		}
+
+		//genarate jwt token
+		expireTime := 30 * 24 * time.Hour
+		token, err :=  utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
+			OtpCode: &otpCode,
+		})
+		
+
+		if err != nil {
+			tokenChannel <- TokenPayload{nil, errors.New("failed to generate jwt token")}
+			return
+		}
+
+		tokenChannel <- TokenPayload{&token, nil}
+	}()
+
 	//set the otpToken to nill
 	user.OtpToken = nil
 	user.IsEmailVerified = true
 	err = app.Store.User.Save(&user)
+
 	if err != nil {
 		return VerifyOtpResponse{}, http.StatusInternalServerError, err
 	}
+
+	tokenResponse := <-tokenChannel
+
+	if tokenResponse.errorMessage != nil {
+		return VerifyOtpResponse{}, http.StatusInternalServerError, tokenResponse.errorMessage
+	}
 	
-	return VerifyOtpResponse{User: user, Token: *token}, http.StatusOK, nil
+	return VerifyOtpResponse{User: user, Token: *tokenResponse.token}, http.StatusOK, nil
 }
 
 

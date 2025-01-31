@@ -16,6 +16,8 @@ import (
 )
 
 func main() {
+
+	// for  development purpose
 	// err := godotenv.Load()
 	// if err != nil {
 	// 	log.Fatal("Error loading .env file")

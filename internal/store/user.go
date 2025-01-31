@@ -73,3 +73,17 @@ func (userRepo *UserRepository) Save(user *models.User) (error) {
 	}
 	return nil
 }
+
+
+func (userRepo *UserRepository) FindByID(id string) (models.User, error) {
+
+	var user models.User
+	result  := userRepo.db.First(&user, "id = ?", id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return models.User{}, errors.New("user with id not found")
+		}
+		return models.User{}, result.Error
+	}
+	return user, nil
+}

@@ -10,6 +10,7 @@ type Storage struct {
 	User interface {
 		Create(models.User) (models.User, *gorm.DB, error)
 		FindByEmail(string) (models.User, error)
+		FindByID(string) (models.User, error)
 		Save(*models.User) error
 	}
 	Post interface {
