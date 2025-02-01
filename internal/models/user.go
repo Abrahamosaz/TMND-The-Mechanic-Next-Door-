@@ -19,6 +19,10 @@ type User struct {
     IsEmailVerified         bool        `gorm:"type:bool;default:false" json:"isEmailVerified"`
     CreatedAt 		        time.Time   `json:"createdAt"`
     UpdatedAt 		        time.Time   `json:"updatedAt"`
+    ProfileFileName         *string     `json:"profileFileName"`
+    ProfileImageUrl         *string     `json:"profileImageUrl"`
+    Address                 *string     `json:"address"`
+    Location                *string     `json:"location"`
 }
 
 

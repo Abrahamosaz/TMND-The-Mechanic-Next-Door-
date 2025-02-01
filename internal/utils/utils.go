@@ -21,3 +21,11 @@ func GenerateOtpCode(length int) (string, error) {
 	return string(otp), nil
 }
 
+
+
+func StringPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}

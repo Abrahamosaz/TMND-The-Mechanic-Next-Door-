@@ -75,6 +75,16 @@ func (userRepo *UserRepository) Save(user *models.User) (error) {
 }
 
 
+func (userRepo *UserRepository) Update(user models.User) (error) {
+	result := userRepo.db.Model(&user).Updates(user)
+	// Check for errors
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
 func (userRepo *UserRepository) FindByID(id string) (models.User, error) {
 
 	var user models.User

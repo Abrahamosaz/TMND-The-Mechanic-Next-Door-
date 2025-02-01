@@ -31,7 +31,14 @@ type SmtpConfig struct {
 }
 
 
-	type VerifyOtpResponse struct {
-		User 	models.User 	`json:"user"`
-		Token 	string			`json:"token"`
-	}
+type VerifyOtpResponse struct {
+	User 	models.User 	`json:"user"`
+	Token 	string			`json:"token"`
+}
+
+
+type EditProfileInfo struct {
+	UserProfile 	EditProfile
+	URL 			string
+	FileName 		string
+}

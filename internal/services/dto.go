@@ -30,3 +30,11 @@ type VerifyOtp struct {
 	Email 				string 	`json:"email" validate:"required,email"`
 	OtpCode  			string 	`json:"otpCode" validate:"required"`
 }
+
+
+type EditProfile struct {
+	Name  			string 		`json:"fullName" validate:"required"`
+	Address 		*string 	`json:"address"`
+	PhoneNumber 	*string 	`json:"phoneNumber"`
+	Location 		*string 	`json:"location"`
+}

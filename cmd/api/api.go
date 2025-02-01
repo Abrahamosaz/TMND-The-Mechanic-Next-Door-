@@ -80,6 +80,7 @@ func (app *application) mount() http.Handler {
 		rootRouter.Route("/user", func(userRouter chi.Router) {
 			userRouter.Use(app.authMiddleware)
 			userRouter.Get("/get-user", app.getUserHandler)
+			userRouter.With(app.uploadMiddleware).Put("/edit-profile", app.editUserProfileHandler)
 		})	
 	})
 	
@@ -136,5 +137,10 @@ func (app *application) responseJSON(statusCode int, w http.ResponseWriter, mess
 
 func (app *application) GetUserFromContext(r *http.Request) (*models.User, bool) {
 	user, ok := r.Context().Value(userContextKey).(*models.User)
+	return user, ok
+}
+
+func (app *application) GetProfileInfoFromContext(r *http.Request) (*UploadResult, bool) {
+	user, ok := r.Context().Value(uploadContextKey).(*UploadResult)
 	return user, ok
 }

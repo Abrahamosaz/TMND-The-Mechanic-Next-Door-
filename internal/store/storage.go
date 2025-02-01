@@ -12,6 +12,7 @@ type Storage struct {
 		FindByEmail(string) (models.User, error)
 		FindByID(string) (models.User, error)
 		Save(*models.User) error
+		Update(models.User) error
 	}
 	Post interface {
 		Create() error

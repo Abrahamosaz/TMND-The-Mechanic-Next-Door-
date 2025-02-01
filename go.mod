@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	ariga.io/atlas-provider-gorm v0.5.0
+	github.com/cloudinary/cloudinary-go/v2 v2.9.1
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
@@ -17,12 +18,14 @@ require (
 
 require (
 	ariga.io/atlas-go-sdk v0.2.3 // indirect
+	github.com/creasty/defaults v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.7.2 // indirect
