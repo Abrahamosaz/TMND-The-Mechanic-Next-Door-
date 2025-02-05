@@ -33,8 +33,40 @@ type VerifyOtp struct {
 
 
 type EditProfile struct {
-	Name  			string 		`json:"fullName" validate:"required"`
-	Address 		*string 	`json:"address"`
-	PhoneNumber 	*string 	`json:"phoneNumber"`
-	Location 		*string 	`json:"location"`
+	FullName  			string 		`json:"fullName" validate:"required"`
+	PhoneNumber 		string 		`json:"phoneNumber" validate:"required"`
+	Address 			*string 	`json:"address"`
+	State 				*string 	`json:"state"`
+	Lga 				*string 	`json:"lga"`
+}
+
+
+
+// bookings dtos
+type Location struct {
+	Lat 	int		`json:"lat" validate:"required"`
+	Lng 	int		`json:"lng" validate:"required"`	
+	Address string	`json:"address" validate:"required"`
+}
+
+type ServiceDetails struct {
+	ServiceType  	string		`json:"type" validate:"required"`
+	Services  		[]string	`json:"services" validate:"required,min=1,dive"`
+	Description 	*string		`json:"description"`
+}
+
+type VehicleDetails struct {
+	VehicleType  	string 		`json:"type" validate:"required"`
+	Brand 			string		`json:"brand" validate:"required"`
+	Size 			string		`json:"size" validate:"required"`
+	Model 			string		`json:"model" validate:"required"`
+	Description 	*string		`json:"description"`
+}
+
+type CreateBooking struct {
+	Location 			Location			`json:"location" validate:"required"`
+	Date 				string				`json:"date" validate:"required"`
+	Time				string 				`json:"time" validate:"required"`
+	ServiceDetails 		ServiceDetails 		`json:"servicesDetails" validate:"required"`
+	VehicleDetails 		VehicleDetails 		`json:"vehicleDetails" validate:"required"`
 }

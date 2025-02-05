@@ -77,11 +77,22 @@ func (app *application) mount() http.Handler {
 		})
 
 
+		//user routes
 		rootRouter.Route("/user", func(userRouter chi.Router) {
 			userRouter.Use(app.authMiddleware)
 			userRouter.Get("/get-user", app.getUserHandler)
 			userRouter.With(app.uploadMiddleware).Put("/edit-profile", app.editUserProfileHandler)
-		})	
+			
+			// booking routes
+			userRouter.Route("/booking", func(bookingRouter chi.Router) {
+				bookingRouter.Get("/get-booking-fee", app.getBookingFeeHandler)
+				bookingRouter.Get("/get-vehicle-details", app.getVehicleDetailsHandlder)
+				bookingRouter.Get("/get-disabled-date", app.getDisabledDateHanlder)
+				bookingRouter.Post("/create-booking", app.createBookingHandler)
+			})
+		})
+
+
 	})
 	
 	return router
@@ -127,11 +138,14 @@ func (app *application) createNewServiceApp()  services.Application {
 func (app *application) responseJSON(statusCode int, w http.ResponseWriter, message string, data interface {}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(Response{
-			Message: message,
-			StatusCode: statusCode,
-			Data: data,
-		})
+	if v, ok := data.([]string); ok && len(v) == 0 {
+		data = []string{}
+	}
+	json.NewEncoder(w).Encode(Response{
+		Message: message,
+		StatusCode: statusCode,
+		Data: data,
+	})
 }
 
 
@@ -140,7 +154,10 @@ func (app *application) GetUserFromContext(r *http.Request) (*models.User, bool)
 	return user, ok
 }
 
-func (app *application) GetProfileInfoFromContext(r *http.Request) (*UploadResult, bool) {
+func (app *application) GetProfileInfoFromContext(r *http.Request) (*UploadResult) {
 	user, ok := r.Context().Value(uploadContextKey).(*UploadResult)
-	return user, ok
+	if !ok {
+		return nil
+	}
+	return user
 }

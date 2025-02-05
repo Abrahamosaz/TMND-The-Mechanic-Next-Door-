@@ -14,11 +14,13 @@ import (
 
 // create new user
 func CreateUser(app *Application, payload Signup) (models.User, int, error) {
-
-	user, tx, err := app.Store.User.Create(models.User{
+	// Start a transaction manually
+	tx := app.Store.BeginTransaction()
+	
+	user, err := app.Store.User.Create(tx, models.User{
 		FullName: payload.FullName,
 		Email: payload.Email,
-		PhoneNumber: &payload.PhoneNumber,
+		PhoneNumber: payload.PhoneNumber,
 		Password: payload.Password,
 		RegisterWithGoogle: payload.RegisterWithGoogle,
 	})
@@ -151,7 +153,7 @@ func LoginUser(app *Application, payload Login) (int, error) {
 		return http.StatusInternalServerError, errors.New("failed to save user")
 	}
 
-	return http.StatusOK,  nil
+	return http.StatusOK, nil
 }
 
 

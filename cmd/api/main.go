@@ -15,8 +15,8 @@ import (
 	gomail "gopkg.in/mail.v2"
 )
 
-func main() {
 
+func main() {
 	// for  development purpose
 	// err := godotenv.Load()
 	// if err != nil {
@@ -57,7 +57,18 @@ func main() {
 	db.EnableUUIDExtension(dbCon)
 
 	// migrate models
-	err = dbCon.AutoMigrate(&models.User{})
+	err = dbCon.AutoMigrate(
+		&models.User{},
+		&models.Mechanic{},
+		&models.ServiceCategory{},
+		&models.Service{},
+		&models.Booking{},
+		&models.Vehicle{},
+		&models.BookingFee{},
+	)
+
+	//sendDB
+	seedDB(dbCon)
 
 	if err != nil {
 		log.Fatal("Failed migrating database models")

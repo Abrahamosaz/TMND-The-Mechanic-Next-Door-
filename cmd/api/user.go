@@ -32,16 +32,16 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	profileInfo, ok := app.GetProfileInfoFromContext(r)
-
-	if !ok {
-		log.Printf("Failed to get profile information")
-		app.responseJSON(http.StatusInternalServerError, w,  "internal server error", nil)
-		return
+	profileInfo := app.GetProfileInfoFromContext(r)
+	var profileURL = utils.StringToPtr(user.ProfileImageUrl)
+	var fileName = utils.StringToPtr(user.ProfileFileName)
+	
+	if profileInfo != nil {
+		profileURL = profileInfo.URL
+		fileName = profileInfo.FileName
 	}
 
 	// var editProfile services.EditProfile
-	
 	err := r.ParseMultipartForm(10 << 20) // 10MB max size
 
 	if err != nil {
@@ -51,10 +51,11 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	editProfile := services.EditProfile{
-		Name: r.FormValue("fullName"),
-		Address: utils.StringPtr(r.FormValue("address")),
-		PhoneNumber: utils.StringPtr(r.FormValue("phoneNumber")),
-		Location:  utils.StringPtr(r.FormValue("location")),
+		FullName: r.FormValue("fullName"),
+		PhoneNumber: r.FormValue("phoneNumber"),
+		Address: utils.PtrToString(r.FormValue("address")),
+		State:  utils.PtrToString(r.FormValue("state")),
+		Lga: utils.PtrToString(r.FormValue("lga")),
 	}
 
 	err = validate.Struct(editProfile)
@@ -67,8 +68,8 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 	serviceApp := app.createNewServiceApp()
 	statusCode, err := services.EditUserProfile(&serviceApp, user.ID, services.EditProfileInfo{
 		UserProfile: editProfile,
-		URL: profileInfo.URL,
-		FileName: profileInfo.FileName,
+		URL: profileURL,
+		FileName: fileName,
 	})
 
 	if err != nil {

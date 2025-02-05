@@ -13,10 +13,11 @@ import (
 func EditUserProfile(app *Application, userId uuid.UUID, editInfo EditProfileInfo) (int, error) {
 	err := app.Store.User.Update(models.User{
 		ID: userId,
-		FullName: editInfo.UserProfile.Name,
+		FullName: editInfo.UserProfile.FullName,
 		PhoneNumber: editInfo.UserProfile.PhoneNumber,
 		Address: editInfo.UserProfile.Address,
-		Location: editInfo.UserProfile.Location,
+		State: editInfo.UserProfile.State,
+		Lga: editInfo.UserProfile.Lga,
 		ProfileFileName: &editInfo.FileName,
 		ProfileImageUrl: &editInfo.URL,
 	})

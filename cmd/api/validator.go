@@ -26,6 +26,8 @@ func ValidateRequestBody(err error, w http.ResponseWriter) {
 				validationErrors[err.Field()] = fmt.Sprintf("%s must be less than or equal to %s", err.Field(), err.Param())
 			case "eqfield":
 				validationErrors[err.Field()] = fmt.Sprintf("%s must match %s", err.Field(), err.Param())
+			case "min":
+				validationErrors[err.Field()] = fmt.Sprintf("%s must contain items greater than %s", err.Field(), err.Param())
 			}
 	}
 
