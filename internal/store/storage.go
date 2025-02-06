@@ -31,6 +31,9 @@ type Storage struct {
 		GetServiceCategories() (*[]models.ServiceCategory, error)
 		GetService(*models.Service) (error)
 	}
+	Transaction interface {
+		Create(*gorm.DB, *models.Transaction) error
+	}
 }
 
 
@@ -43,5 +46,6 @@ func PostgresStorage(db *gorm.DB) Storage {
 		Mechanic: &postgres.MechanicRepository{DB: db},
 		Booking: &postgres.BookingRepository{DB: db},
 		Service: &postgres.ServiceRepository{DB: db},
+		Transaction: &postgres.TransactionRepository{DB: db},
 	}
 }

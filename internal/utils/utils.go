@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"log"
 	"math/big"
+	mathRand "math/rand"
 	"strings"
 	"time"
 )
@@ -75,4 +77,14 @@ func GetNextNumDays(days int) []string {
 	}
 
 	return dates
+}
+
+
+func GenerateUniquePaymentRef() string {
+	r := mathRand.New(mathRand.NewSource(time.Now().UnixNano()))
+	// Get the current Unix timestamp
+	currentTime := time.Now().Unix()
+	randomNumber := r.Intn(900000) + 100000
+	transactionRef := fmt.Sprintf("REF%d%d", currentTime, randomNumber)
+	return transactionRef
 }

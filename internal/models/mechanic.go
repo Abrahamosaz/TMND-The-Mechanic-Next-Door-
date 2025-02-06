@@ -10,26 +10,27 @@ import (
 
 
 type Mechanic struct {
-	ID        		        uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
-	FullName      	        string      `gorm:"type:varchar(100)" json:"fullName"`
-    Email     		        string      `gorm:"type:varchar(100);unique" json:"email"`
-    PhoneNumber             string      `gorm:"type:varchar(20);index" json:"phoneNumber"` 
-    Password  		        string      `gorm:"type:varchar(100)" json:"-"`
-	OtpToken                *string     `gorm:"type:text" json:"-"`
-    IsEmailVerified         bool        `gorm:"type:bool;default:false" json:"isEmailVerified"`
-    ProfileFileName         *string     `json:"profileFileName"`
-    ProfileImageUrl         *string     `json:"profileImageUrl"`
-    Address                 *string     `json:"address"`
-    State                   *string     `json:"state"`
-    Lga                     *string     `json:"lga"`
-	Specialty				string		`json:"specialty"`
-	Rating					float64		`gorm:"default:5.0" json:"rating"`
-	Experience				int 		`json:"experience"`	// years of experience
-	IsAvailable 			bool		`gorm:"type:bool;default:false" json:"isAvailable"`
-	Bookings				[]Booking	`gorm:"foreignKey:MechanicID" json:"bookings"`
-    Balance                 float64     `gorm:"default:0.0" json:"balance"`
-	CreatedAt 		        time.Time   `json:"createdAt"`
-    UpdatedAt 		        time.Time   `json:"updatedAt"`
+	ID        		        uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
+	FullName      	        string          `gorm:"type:varchar(100)" json:"fullName"`
+    Email     		        string          `gorm:"type:varchar(100);unique" json:"email"`
+    PhoneNumber             string          `gorm:"type:varchar(20);index" json:"phoneNumber"` 
+    Password  		        string          `gorm:"type:varchar(100)" json:"-"`
+	OtpToken                *string         `gorm:"type:text" json:"-"`
+    IsEmailVerified         bool            `gorm:"type:bool;default:false" json:"isEmailVerified"`
+    ProfileFileName         *string         `json:"profileFileName"`
+    ProfileImageUrl         *string         `json:"profileImageUrl"`
+    Address                 *string         `json:"address"`
+    State                   *string         `json:"state"`
+    Lga                     *string         `json:"lga"`
+	Specialty				string		    `json:"specialty"`
+	Rating					float64		    `gorm:"default:5.0" json:"rating"`
+	Experience				int 		    `json:"experience"`	// years of experience
+	IsAvailable 			bool		    `gorm:"type:bool;default:false" json:"isAvailable"`
+	Bookings				[]Booking	    `gorm:"foreignKey:MechanicID" json:"bookings"`
+    Transactions            []Transaction   `gorm:"foreignKey:MechanicID" json:"transactions"`
+    Balance                 float64         `gorm:"default:0.0" json:"balance"`
+	CreatedAt 		        time.Time       `json:"createdAt"`
+    UpdatedAt 		        time.Time       `json:"updatedAt"`
 }
 
 

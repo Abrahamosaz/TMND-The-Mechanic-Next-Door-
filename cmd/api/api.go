@@ -95,6 +95,11 @@ func (app *application) mount() http.Handler {
 			userRouter.Route("/service", func(serviceRouter chi.Router) {
 				serviceRouter.Get("/get-service-categories", app.getServicesHandler)
 			})
+
+			//transaction routes
+			userRouter.Route("/transaction", func(trxRouter chi.Router) {
+				// trxRouter.Get()
+			})
 		})
 
 
@@ -106,6 +111,12 @@ func (app *application) mount() http.Handler {
 			mechanicRouter.Route("/booking", func(bookingRouter chi.Router) {
 				bookingRouter.Get("/reject", app.rejectBookingHandler)
 				bookingRouter.Get("/accept", app.acceptBookingHandler)
+			})
+
+
+			//transaction routes
+			mechanicRouter.Route("/transaction", func(trxRouter chi.Router) {
+				// trxRouter.Get()
 			})
 
 		})

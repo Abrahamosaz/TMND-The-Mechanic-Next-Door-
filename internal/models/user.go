@@ -9,23 +9,24 @@ import (
 
 
 type User struct {
-	ID        		        uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
-    FullName      	        string      `gorm:"type:varchar(100)" json:"fullName"`
-    Email     		        string      `gorm:"type:varchar(100);unique" json:"email"`
-    PhoneNumber             string      `gorm:"type:varchar(20);index" json:"phoneNumber"` 
-    Password  		        string      `gorm:"type:varchar(100)" json:"-"`
-    RegisterWithGoogle      bool        `gorm:"type:bool" json:"registerWithGoogle"`
-    OtpToken                *string     `gorm:"type:text" json:"-"`
-    IsEmailVerified         bool        `gorm:"type:bool;default:false" json:"isEmailVerified"`
-    ProfileFileName         *string     `json:"profileFileName"`
-    ProfileImageUrl         *string     `json:"profileImageUrl"`
-    Address                 *string     `json:"address"`
-    State                   *string     `json:"state"`
-    Lga                     *string     `json:"lga"`
-    Balance                 float64     `gorm:"default:0.0" json:"balance"`
-    Bookings				[]Booking	`gorm:"foreignKey:UserID" json:"bookings"`
-    CreatedAt 		        time.Time   `json:"createdAt"`
-    UpdatedAt 		        time.Time   `json:"updatedAt"`
+	ID        		        uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
+    FullName      	        string          `gorm:"type:varchar(100)" json:"fullName"`
+    Email     		        string          `gorm:"type:varchar(100);unique" json:"email"`
+    PhoneNumber             string          `gorm:"type:varchar(20);index" json:"phoneNumber"` 
+    Password  		        string          `gorm:"type:varchar(100)" json:"-"`
+    RegisterWithGoogle      bool            `gorm:"type:bool" json:"registerWithGoogle"`
+    OtpToken                *string         `gorm:"type:text" json:"-"`
+    IsEmailVerified         bool            `gorm:"type:bool;default:false" json:"isEmailVerified"`
+    ProfileFileName         *string         `json:"profileFileName"`
+    ProfileImageUrl         *string         `json:"profileImageUrl"`
+    Address                 *string         `json:"address"`
+    State                   *string         `json:"state"`
+    Lga                     *string         `json:"lga"`
+    Balance                 float64         `gorm:"default:0.0" json:"balance"`
+    Bookings				[]Booking   	`gorm:"foreignKey:UserID" json:"bookings"`
+    Transactions            []Transaction   `gorm:"foreignKey:UserID" json:"transactions"`
+    CreatedAt 		        time.Time       `json:"createdAt"`
+    UpdatedAt 		        time.Time       `json:"updatedAt"`
 }
 
 

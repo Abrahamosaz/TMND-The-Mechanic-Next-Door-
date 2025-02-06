@@ -18,6 +18,7 @@ const (
 
 type Booking struct {
 	ID       		        uuid.UUID   		`gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
+	PaymentRef 				string 				`gorm:"type:varchar(255);unique" json:"paymentRef"`
 	UserID					uuid.UUID			`json:"userId"`
 	AssignedMechanicID		uuid.UUID			`json:"-"`
 	MechanicID				*uuid.UUID			`json:"mechanicId"`
@@ -29,8 +30,8 @@ type Booking struct {
 	BookingFee				float64				`gorm:"default:0.0" json:"bookingFee"`
 	BookingDate				time.Time			`json:"bookingDate"`
 	Status					BookingStatus		`json:"status"`
-	Latitude				int					`json:"latitude"`
-	Longitude				int					`json:"longitude"`
+	Latitude				float64				`json:"latitude"`
+	Longitude				float64				`json:"longitude"`
 	Address					string				`json:"address"`
 	BlacklistedMechanics 	[]string 			`gorm:"type:jsonb" json:"-"`
 	NextExecutionTime		*time.Time			`json:"-"`

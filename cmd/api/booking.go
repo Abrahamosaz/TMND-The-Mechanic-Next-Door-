@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -49,14 +48,13 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 
 	var createBookingDto services.CreateBooking
 	err := json.NewDecoder(r.Body).Decode(&createBookingDto)
+
 	if err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	err = validate.Struct(createBookingDto)
-	fmt.Println("create booking data", createBookingDto)
-
 	if err != nil {
 		ValidateRequestBody(err, w)
 		return

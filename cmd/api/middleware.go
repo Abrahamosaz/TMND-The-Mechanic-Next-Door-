@@ -39,7 +39,6 @@ func (app *application) userAuthMiddleware(next http.Handler) http.Handler {
 }
 
 
-
 func (app *application) mechanicAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.authenticateJWT(r, w, next, "MECHANIC")
@@ -88,7 +87,12 @@ func (app *application) authenticateJWT(r *http.Request, w http.ResponseWriter, 
 		}
 
 		// Attach user to context
-		ctx := context.WithValue(r.Context(), userContextKey, &user)
+		key := userContextKey
+		if role == "MECHANIC" {
+			key = mechanicContextKey
+		} 
+
+		ctx := context.WithValue(r.Context(), key, &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 }
 

@@ -35,7 +35,8 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
         return models.Booking{}, http.StatusNotAcceptable, errors.New("insufficient funds")
     }
 
-    amount := user.Balance - bookingFee.Price
+    previousBalance := user.Balance
+    amount := previousBalance - bookingFee.Price
     err = app.Store.User.DeductFromBalance(tx, user, amount)
 
     if err != nil {
@@ -58,6 +59,20 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
         }
     }
 
+    // create a new transaction
+    err = CreateNewTransaction(app, tx, &models.Transaction{
+        PaymentRef: utils.GenerateUniquePaymentRef(),
+        UserID: &user.ID,
+        PreviousBalance: previousBalance,
+        CurrentBalance: user.Balance,
+        Amount: bookingFee.Price,
+    })
+
+    if  err != nil {
+        tx.Rollback()
+        return models.Booking{}, http.StatusInternalServerError, err
+    }
+
     var temporaryMechanic models.Mechanic
     select {
         case tempMechanic := <-tempMechanicChan:
@@ -70,6 +85,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
     // found mechanic
     booking := models.Booking{
 		UserID:     user.ID,
+        PaymentRef: utils.GenerateUniquePaymentRef(),
 		Services:   services,
         Latitude: payload.Location.Lat,
         Longitude: payload.Location.Lng,

@@ -41,12 +41,11 @@ type EditProfile struct {
 }
 
 
-
 // bookings dtos
 type Location struct {
-	Lat 	int		`json:"lat" validate:"required"`
-	Lng 	int		`json:"lng" validate:"required"`	
-	Address string	`json:"address" validate:"required"`
+	Lat 	float64		`json:"lat" validate:"required"`
+	Lng 	float64		`json:"lng" validate:"required"`	
+	Address string		`json:"address" validate:"required"`
 }
 
 type ServiceDetails struct {
