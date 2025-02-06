@@ -12,6 +12,7 @@ import (
 
 type PayloadClaims struct {
 	OtpCode *string `json:"otpCode"`
+	Role 	string		`json:"role"`
 }
 
 

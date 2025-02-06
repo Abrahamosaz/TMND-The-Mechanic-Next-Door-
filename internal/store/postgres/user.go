@@ -94,3 +94,10 @@ func (userRepo *UserRepository) FindByID(id string) (models.User, error) {
 	}
 	return user, nil
 }
+
+func (userRepo *UserRepository) DeductFromBalance(tx *gorm.DB, user *models.User, amount float64) error {
+	if err := tx.Model(user).Update("balance", amount).Error; err != nil {
+		return err
+	}
+	return nil
+}

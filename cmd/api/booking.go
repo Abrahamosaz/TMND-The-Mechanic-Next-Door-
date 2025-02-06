@@ -47,7 +47,6 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	log.Println("user", user)
 	var createBookingDto services.CreateBooking
 	err := json.NewDecoder(r.Body).Decode(&createBookingDto)
 	if err != nil {
@@ -64,7 +63,7 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	serviceApp := app.createNewServiceApp()
-	statusCode, err := services.CreateUserBooking(&serviceApp, createBookingDto, user)
+	newBooking, statusCode, err := services.CreateUserBooking(&serviceApp, createBookingDto, user)
 
 	if err != nil {
 		log.Println("error creating new booking: ", err.Error())
@@ -76,7 +75,7 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	app.responseJSON(http.StatusOK, w, "Booking created successfully", nil)
+	app.responseJSON(http.StatusOK, w, "Booking created successfully", newBooking)
 }
 
 
@@ -94,7 +93,7 @@ func (app *application) getBookingFeeHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	app.responseJSON(http.StatusOK, w, "Booking fee retrieve successfully", fee)
+	app.responseJSON(statusCode, w, "Booking fee retrieve successfully", fee)
 
 }
 
@@ -114,4 +113,23 @@ func (app *application) getVehicleDetailsHandlder(w http.ResponseWriter, r *http
 		Models: VEHICLE_MODELS,
 		Brands: VEHICLE_BRANDS,
 	})
+}
+
+
+func (app *application) getServicesHandler(w http.ResponseWriter, r *http.Request) {
+
+	serviceApp := app.createNewServiceApp()
+	fee, statusCode, err := services.GetBookingServices(&serviceApp)
+
+		if err != nil {
+		log.Println("error getting booking services: ", err.Error())
+		message := err.Error()
+		if (statusCode == http.StatusInternalServerError) {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+
+	app.responseJSON(statusCode, w, "Services retrieve successfully", fee)
 }

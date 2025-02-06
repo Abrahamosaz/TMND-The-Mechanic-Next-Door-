@@ -19,6 +19,8 @@ import (
 type contextKey string
 const userContextKey contextKey = "user"
 
+const mechanicContextKey contextKey = "mechanic"
+
 type uploadContext string
 const uploadContextKey uploadContext = "uploadedFileURL"
 
@@ -27,10 +29,25 @@ type UploadResult struct {
 	URL      string
 	FileName string
 }
-	
 
-func (app  *application) authMiddleware(next http.Handler) http.Handler {
+
+
+func (app *application) userAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.authenticateJWT(r, w, next, "USER")
+	})
+}
+
+
+
+func (app *application) mechanicAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.authenticateJWT(r, w, next, "MECHANIC")
+	})
+}
+
+
+func (app *application) authenticateJWT(r *http.Request, w http.ResponseWriter, next http.Handler, role string) {
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
@@ -56,6 +73,13 @@ func (app  *application) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		payloadRole := claims.Role
+
+		if payloadRole != role {
+			app.responseJSON(http.StatusUnauthorized, w, "Unauthorized: Invalid token", nil)
+			return
+		}
+		
 		// get the user from the id
 		user, err := app.store.User.FindByID(claims.Subject)
 		if err != nil {
@@ -66,8 +90,8 @@ func (app  *application) authMiddleware(next http.Handler) http.Handler {
 		// Attach user to context
 		ctx := context.WithValue(r.Context(), userContextKey, &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }
+
 
 
 

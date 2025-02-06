@@ -23,7 +23,7 @@ type Mechanic struct {
     State                   *string     `json:"state"`
     Lga                     *string     `json:"lga"`
 	Specialty				string		`json:"specialty"`
-	Rating					float64		`gorm:"default:0.0" json:"rating"`
+	Rating					float64		`gorm:"default:5.0" json:"rating"`
 	Experience				int 		`json:"experience"`	// years of experience
 	IsAvailable 			bool		`gorm:"type:bool;default:false" json:"isAvailable"`
 	Bookings				[]Booking	`gorm:"foreignKey:MechanicID" json:"bookings"`

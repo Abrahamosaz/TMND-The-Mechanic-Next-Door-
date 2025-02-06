@@ -41,13 +41,14 @@ const (
 
 type Service struct {
 	ID        		        uuid.UUID   		`gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
-	ServiceCategoryID		uuid.UUID			`json:"serviceCategoryID"`	
+	ServiceCategoryID		uuid.UUID			`json:"serviceCategoryId"`	
 	Name					string				`json:"name"`
 	Description				string				`json:"description"`
-	BasePrice				float64				`json:"basePrice"`				
+	BasePrice				float64				`json:"basePrice"`		
 	Duration				time.Duration		`json:"duration"`
 	Difficulty				ServiceDifficulty 	`json:"difficulty"`
 	IsAvailable				bool				`json:"isAvailable"`
+	Bookings 				[]*Booking			`gorm:"many2many:booking_services" json:"bookings"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`
 }

@@ -31,3 +31,25 @@ func (mechanicRepo *MechanicRepository) GetAllAvailableMechanics() (*[]models.Me
 
 	return &mechanics, nil
 }
+
+
+func (mechanicRepo *MechanicRepository) GetAvailableMechanic(blackListedIDS []string) (*models.Mechanic, error) {
+	var mechanic models.Mechanic
+
+	query := mechanicRepo.DB.Where("is_available = ?", true)
+    
+    if len(blackListedIDS) > 0 {
+        query = query.Where("id NOT IN (?)", blackListedIDS)
+    }
+    
+	result := query.Order("rating DESC").
+        Limit(1).
+        First(&mechanic)
+
+	
+    if err := result.Error; err != nil {
+        return &mechanic, err
+    }
+
+	return &mechanic, nil
+}

@@ -79,7 +79,7 @@ func (app *application) mount() http.Handler {
 
 		//user routes
 		rootRouter.Route("/user", func(userRouter chi.Router) {
-			userRouter.Use(app.authMiddleware)
+			userRouter.Use(app.userAuthMiddleware)
 			userRouter.Get("/get-user", app.getUserHandler)
 			userRouter.With(app.uploadMiddleware).Put("/edit-profile", app.editUserProfileHandler)
 			
@@ -90,13 +90,32 @@ func (app *application) mount() http.Handler {
 				bookingRouter.Get("/get-disabled-date", app.getDisabledDateHanlder)
 				bookingRouter.Post("/create-booking", app.createBookingHandler)
 			})
+
+			//service routes
+			userRouter.Route("/service", func(serviceRouter chi.Router) {
+				serviceRouter.Get("/get-service-categories", app.getServicesHandler)
+			})
 		})
 
 
+		//mechanic routes
+		rootRouter.Route("/mechanic", func(mechanicRouter chi.Router) {
+			mechanicRouter.Use(app.mechanicAuthMiddleware)
+
+			// booking routes
+			mechanicRouter.Route("/booking", func(bookingRouter chi.Router) {
+				bookingRouter.Get("/reject", app.rejectBookingHandler)
+				bookingRouter.Get("/accept", app.acceptBookingHandler)
+			})
+
+		})
 	})
 	
 	return router
 }
+
+
+
 
 
 func (app *application) run(mux http.Handler) (error) {

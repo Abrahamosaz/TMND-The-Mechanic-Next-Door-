@@ -326,9 +326,9 @@ func VerifyEmail(app *Application, payload VerifyOtp) (VerifyOtpResponse, int, e
 		expireTime := 30 * 24 * time.Hour
 		token, err :=  utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
 			OtpCode: &otpCode,
+			Role: "USER",
 		})
 		
-
 		if err != nil {
 			tokenChannel <- TokenPayload{nil, errors.New("failed to generate jwt token")}
 			return

@@ -45,8 +45,6 @@ func main() {
 		SSLMode: os.Getenv("DB_MODE"),
 	}
 
-
-
 	dbCon, err := db.ConnectDB(dbConfig)
 	
 	if err != nil {

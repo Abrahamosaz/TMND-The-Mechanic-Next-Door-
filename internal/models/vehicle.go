@@ -13,7 +13,7 @@ type Vehicle struct {
 	Vtype 					string		`gorm:"type:varchar(10)" json:"type"`
 	Brand					string		`gorm:"type:varchar(20)" json:"brand"`
 	Size					string		`gorm:"type:varchar(10)" json:"size"`
-	Model					int			`gorm:"type:varchar(4)" json:"model"`
+	Model					int			`json:"model"`
 	BookingID 				uuid.UUID	`json:"bookingId"`
 	CreatedAt 		        time.Time   `json:"createdAt"`
     UpdatedAt 		        time.Time   `json:"updatedAt"`

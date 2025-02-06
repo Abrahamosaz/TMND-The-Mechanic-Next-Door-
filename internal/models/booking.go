@@ -17,15 +17,23 @@ const (
 
 
 type Booking struct {
-	ID        		        uuid.UUID   		`gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
+	ID       		        uuid.UUID   		`gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
 	UserID					uuid.UUID			`json:"userId"`
+	AssignedMechanicID		uuid.UUID			`json:"-"`
 	MechanicID				*uuid.UUID			`json:"mechanicId"`
-	ServiceID				uuid.UUID			`json:"serviceId"`
+	Services				[]*Service			`gorm:"many2many:booking_services" json:"services"`
+	ServiceType 			string				`json:"serviceType"`
+	ServiceDescription		*string				`json:"serviceDescription"`		
 	Vehicle 				Vehicle				`gorm:"foreignKey:BookingID" json:"vehicle"`
 	EstimatedPrice			float64				`gorm:"default:0.0" json:"estimatedPrice"`
 	BookingFee				float64				`gorm:"default:0.0" json:"bookingFee"`
 	BookingDate				time.Time			`json:"bookingDate"`
 	Status					BookingStatus		`json:"status"`
+	Latitude				int					`json:"latitude"`
+	Longitude				int					`json:"longitude"`
+	Address					string				`json:"address"`
+	BlacklistedMechanics 	[]string 			`gorm:"type:jsonb" json:"-"`
+	NextExecutionTime		*time.Time			`json:"-"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`
 }

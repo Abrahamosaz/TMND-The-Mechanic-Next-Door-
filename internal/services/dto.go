@@ -51,7 +51,7 @@ type Location struct {
 
 type ServiceDetails struct {
 	ServiceType  	string		`json:"type" validate:"required"`
-	Services  		[]string	`json:"services" validate:"required,min=1,dive"`
+	Services  		[]string	`json:"services"`
 	Description 	*string		`json:"description"`
 }
 
@@ -59,14 +59,13 @@ type VehicleDetails struct {
 	VehicleType  	string 		`json:"type" validate:"required"`
 	Brand 			string		`json:"brand" validate:"required"`
 	Size 			string		`json:"size" validate:"required"`
-	Model 			string		`json:"model" validate:"required"`
+	Model 			int			`json:"model" validate:"required"`
 	Description 	*string		`json:"description"`
 }
 
 type CreateBooking struct {
 	Location 			Location			`json:"location" validate:"required"`
 	Date 				string				`json:"date" validate:"required"`
-	Time				string 				`json:"time" validate:"required"`
 	ServiceDetails 		ServiceDetails 		`json:"servicesDetails" validate:"required"`
 	VehicleDetails 		VehicleDetails 		`json:"vehicleDetails" validate:"required"`
 }

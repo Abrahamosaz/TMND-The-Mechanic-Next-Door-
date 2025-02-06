@@ -96,7 +96,7 @@ func seedDB(db *gorm.DB) {
 	for _, category := range serviceCategories {
 		switch (category.Name) {
 			case "Routine Maintenance":
-				RoutineMaintenanceServices := []*models.Service{
+				routineMaintenanceServices := []*models.Service{
 					{ServiceCategoryID: category.ID, Name: "Oil Change Labor", Description: "Changing engine oil to maintain engine health.", BasePrice: 2500, Duration: 1800 * time.Second, Difficulty: models.Easy, IsAvailable: false},
 					{ServiceCategoryID: category.ID, Name: "Tire Rotation & Balancing Labor", Description: "Rotating and balancing tires to ensure even wear.", BasePrice: 3000, Duration: 2700 * time.Second, Difficulty: models.Medium, IsAvailable: true},
 					{ServiceCategoryID: category.ID, Name: "Brake Pad Replacement Labor (per axle)", Description: "Replacing brake pads to ensure safety and performance.", BasePrice: 8000, Duration: 5400 * time.Second, Difficulty: models.Easy, IsAvailable: true},
@@ -105,7 +105,7 @@ func seedDB(db *gorm.DB) {
 					{ServiceCategoryID: category.ID, Name: "Wheel Alignment Labor", Description: "Adjusting wheel alignment for improved handling and tire longevity.", BasePrice: 4000, Duration: 2700 * time.Second, Difficulty: models.Medium, IsAvailable: true},
 				}
 
-				for _, service := range RoutineMaintenanceServices {
+				for _, service := range routineMaintenanceServices {
 					var existingService models.Service
 					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
 					if result.Error != nil {
@@ -118,21 +118,153 @@ func seedDB(db *gorm.DB) {
 				}
 
 			case "Engine Services":
-				fmt.Println()
+				engineServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Timing Belt Replacement Labor", Description: "Replacing the timing belt to prevent engine damage.", BasePrice: 15000, Duration: 14400 * time.Second, Difficulty: models.Hard, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Engine Tune-Up Labor", Description: "Performing a full engine tune-up for better performance.", BasePrice: 10000, Duration: 7200 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Spark Plug Replacement Labor", Description: "Replacing spark plugs for efficient engine performance.", BasePrice: 3000, Duration: 1800 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Engine Overhaul Labor", Description: "RComplete engine overhaul for restoring performance.", BasePrice: 70000, Duration: 86400 * time.Second, Difficulty: models.Hard, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Fuel Injector Cleaning Labor", Description: "Cleaning fuel injectors to improve fuel efficiency.", BasePrice: 6000, Duration: 3600 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+				}
+
+				for _, service := range engineServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Transmission Services":
-				fmt.Println()
+				transmissionServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Transmission Fluid Change Labor", Description: "Changing transmission fluid for smoother gear shifts.", BasePrice: 10000, Duration: 3600 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Clutch Replacement Labor", Description: "Replacing the clutch for optimal transmission function.", BasePrice: 20000, Duration: 14400 * time.Second, Difficulty: models.Hard, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Transmission Repair Labor", Description: "Repairing transmission components for improved operation.", BasePrice: 50000, Duration: 28800 * time.Second, Difficulty: models.Hard, IsAvailable: true},
+
+				}
+
+				for _, service := range transmissionServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Electrical & Battery":
-				fmt.Println()
+				electricalAndBatteryServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Battery Installation Labor", Description: "Installing a new battery for proper power supply.", BasePrice: 2000, Duration: 1800 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Alternator Repair Labor", Description: "Repairing the alternator to restore charging function.", BasePrice: 15000, Duration: 10800 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Starter Motor Replacement Labor", Description: "Replacing the starter motor for reliable engine start.", BasePrice: 10000, Duration: 7200 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Wiring Repairs Labor", Description: "Fixing electrical wiring issues for optimal functionality.", BasePrice: 3000, Duration: 3600 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+				}
+
+				for _, service := range electricalAndBatteryServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Suspension & Steering":
-				fmt.Println()
+				suspensionAndSteeringServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Shock Absorber Replacement Labor (per unit)", Description: "Replacing shock absorbers for improved ride comfort.", BasePrice: 8000, Duration: 7200 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Ball Joint Replacement Labor", Description: "Replacing ball joints for better steering control.", BasePrice: 6000, Duration: 5400 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Power Steering Flush Labor", Description: "Flushing power steering fluid for smooth operation.", BasePrice: 5000, Duration: 3600 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Tie Rod Replacement Labor", Description: "Replacing tie rods for precise steering.", BasePrice: 7000, Duration: 5400 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+				}
+
+				for _, service := range suspensionAndSteeringServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Exhaust System":
-				fmt.Println()
+				exhaustSystemServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Muffler Replacement Labor", Description: "Replacing muffler for proper noise reduction.", BasePrice: 5000, Duration: 3600 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Catalytic Converter Replacement Labor", Description: "Replacing catalytic converter for emissions control.", BasePrice: 25000, Duration: 7200 * time.Second, Difficulty: models.Hard, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Exhaust Pipe Repair Labor", Description: "Repairing exhaust pipe for proper gas flow.", BasePrice: 6000, Duration: 4800 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+				}
+
+				for _, service := range exhaustSystemServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Air Conditioning (AC)":
-				fmt.Println()
+				airConditioningServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "AC Gas Recharge Labor", Description: "Recharging AC gas for optimal cooling.", BasePrice: 5000, Duration: 2700 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Compressor Replacement Labor", Description: "Replacing AC compressor for proper system function.", BasePrice: 25000, Duration: 10800 * time.Second, Difficulty: models.Hard, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "AC Leak Repair Labor", Description: "Repairing AC system leaks.", BasePrice: 10000, Duration: 7200 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+				}
+
+				for _, service := range airConditioningServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Diagnostics":
-				fmt.Println()
+				diagnosticsServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Computer Diagnostics Labor", Description: "Running computer diagnostics to identify issues.", BasePrice: 3000, Duration: 1800 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Engine Light Scan Labor", Description: "Scanning engine light codes for problem identification.", BasePrice: 1500, Duration: 900 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+				}
+
+				for _, service := range diagnosticsServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			case "Bodywork & Miscellaneous":
-				fmt.Println()
+				bodyWorkServices := []*models.Service{
+					{ServiceCategoryID: category.ID, Name: "Windshield Replacement Labor", Description: "Replacing damaged windshield.", BasePrice: 10000, Duration: 5400 * time.Second, Difficulty: models.Medium, IsAvailable: true},
+					{ServiceCategoryID: category.ID, Name: "Headlight/Taillight Installation Labor", Description: "Installing new headlights or taillights.", BasePrice: 3000, Duration: 2700 * time.Second, Difficulty: models.Easy, IsAvailable: true},
+			
+				}
+
+				for _, service := range bodyWorkServices {
+					var existingService models.Service
+					result := db.Where("name = ? AND service_category_id = ?", service.Name, service.ServiceCategoryID).First(&existingService)
+					if result.Error != nil {
+						// Insert the service if it does not exist
+						result := db.Create(&service)
+						if result.Error != nil {
+							log.Printf("log seeder: failed to create %s service", service.Name)
+						}
+					}
+				}
 			default:
 				fmt.Println()
 		}
