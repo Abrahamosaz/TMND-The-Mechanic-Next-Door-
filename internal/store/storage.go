@@ -26,6 +26,8 @@ type Storage struct {
 		GetPendingBookings() (*[]models.Booking, error)
 		Create(*gorm.DB, models.Booking) (models.Booking, error)
 		GetBookingFee() (models.BookingFee, error)
+		GetBooking(*models.Booking) error
+		UpdateBooking(*models.Booking) error
 	}
 	Service interface {
 		GetServiceCategories() (*[]models.ServiceCategory, error)

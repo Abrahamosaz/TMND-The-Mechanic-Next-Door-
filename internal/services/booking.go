@@ -60,8 +60,14 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
     }
 
     // create a new transaction
+    trxRef, err := utils.GenerateUniqueTrxRef("DEBIT")
+    if err != nil {
+        tx.Rollback()
+        return models.Booking{}, http.StatusInternalServerError, err
+    }
+
     err = CreateNewTransaction(app, tx, &models.Transaction{
-        PaymentRef: utils.GenerateUniquePaymentRef(),
+        TrxRef: trxRef,
         UserID: &user.ID,
         PreviousBalance: previousBalance,
         CurrentBalance: user.Balance,
@@ -112,6 +118,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
 
     tx.Commit()
     //set a cronjob to run after one hour to check if the booking has been assigned to a given mechanic
+    go CheckBookingStatusJob(app, &booking)
 	return newBooking, http.StatusCreated, nil
 }
 

@@ -16,9 +16,10 @@ const (
 	StatusSuccess 	TrasactionStatus = "success"
 )
 
+
 type Transaction struct {
 	ID        		        uuid.UUID   		`gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
-	PaymentRef 				string 				`gorm:"type:varchar(255);unique" json:"paymentRef"`
+	TrxRef 					string 				`gorm:"type:varchar(255);unique" json:"trxRef"`
 	UserID					*uuid.UUID			`json:"userId"`
 	MechanicID				*uuid.UUID			`json:"mechanicId"`
 	PreviousBalance			float64				`json:"previousBalance"`

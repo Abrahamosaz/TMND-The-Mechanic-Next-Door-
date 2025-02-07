@@ -10,6 +10,8 @@ import (
 	mathRand "math/rand"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 
@@ -87,4 +89,19 @@ func GenerateUniquePaymentRef() string {
 	randomNumber := r.Intn(900000) + 100000
 	transactionRef := fmt.Sprintf("REF%d%d", currentTime, randomNumber)
 	return transactionRef
+}
+
+
+func GenerateUniqueTrxRef(trxType string) (string, error) {
+	// Ensure trxType is lowercase and then capitalize the first letter
+	trxType = strings.ToLower(trxType)
+	if trxType != "debit" && trxType != "credit" {
+		return "", errors.New("invalid_trx_type")
+	}
+
+	// Generate a UUID
+	uniqueID := uuid.New().String()
+
+	// Return formatted transaction reference
+	return fmt.Sprintf("%s_%s", trxType, uniqueID), nil
 }

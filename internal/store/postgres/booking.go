@@ -49,3 +49,19 @@ func (bookingRepo *BookingRepository) GetBookingFee() (models.BookingFee, error)
 	
 	return bookingFee, nil
 }
+
+
+func (bookingRepo *BookingRepository) GetBooking(booking *models.Booking) error {
+	if err := bookingRepo.DB.First(booking).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+
+func (bookingRepo *BookingRepository) UpdateBooking(booking *models.Booking) error {
+	if err := bookingRepo.DB.Model(booking).Updates(*booking).Error; err != nil {
+		return err
+	}
+	return nil
+} 
