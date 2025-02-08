@@ -67,13 +67,15 @@ func (app *application) mount() http.Handler {
 		// rootRouter.Get("/send-email", app.testSendMail)
 
 		rootRouter.Route("/auth", func(authRouter chi.Router) {	
-			authRouter.Post("/signup", app.signupHandler)
-			authRouter.Post("/login", app.loginHandler)
+			authRouter.Post("/signup", app.userSignupHandler)
+			authRouter.Post("/login", app.userLoginHandler)
 			authRouter.Post("/forgot-password", app.forgotPasswordHandler)
 			authRouter.Post("/verify-otp", app.verifyOtpHandler)
 			authRouter.Post("/change-password", app.changePasswordHandlder)
 			authRouter.Post("/resend-otp", app.resendOtpHandler)
 			authRouter.Post("/verify-email", app.verifyEmailHandler)
+
+			authRouter.Post("/mechanic/login", app.mechanicLoginHandler)
 		})
 
 

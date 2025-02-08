@@ -18,7 +18,9 @@ type Storage struct {
 		DeductFromBalance(*gorm.DB, *models.User, float64) error
 	}
 	Mechanic interface {
+		FindByEmail(string) (models.Mechanic, error)
 		Create(*gorm.DB, models.Mechanic) (models.Mechanic, error)
+		Save(*models.Mechanic) error
 		GetAllAvailableMechanics() (*[]models.Mechanic, error)
 		GetAvailableMechanic([]string) (*models.Mechanic, error)
 	}

@@ -12,7 +12,7 @@ import (
 
 var validate = validator.New(validator.WithRequiredStructEnabled())
 
-func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) userSignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	var signUpDto services.Signup
 
@@ -47,8 +47,7 @@ func (app *application) signupHandler(w http.ResponseWriter, r *http.Request) {
 	app.responseJSON(statusCode, w, "USer created successfully", user)
 }
 
-
-func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var loginDto services.Login
 
@@ -82,6 +81,41 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	app.responseJSON(statusCode, w, "User login successfully", nil)
 }
 
+func (app *application) mechanicLoginHandler(w http.ResponseWriter, r *http.Request) {
+
+	var loginDto services.Login
+
+	err := json.NewDecoder(r.Body).Decode(&loginDto)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = validate.Struct(loginDto)
+
+	if err != nil {
+		ValidateRequestBody(err, w)
+		return
+	}
+
+	serviceApp := app.createNewServiceApp()
+
+	statusCode, err := services.LoginMechanic(&serviceApp, loginDto)
+
+	if err != nil {
+		log.Println("error login: ", err.Error())
+		message := err.Error()
+		if (statusCode == http.StatusInternalServerError) {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+
+	app.responseJSON(statusCode, w, "Mechanic login successfully", nil)
+}
+
+
 func (app *application) forgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	var forgotPasswordDto services.Email
@@ -101,7 +135,7 @@ func (app *application) forgotPasswordHandler(w http.ResponseWriter, r *http.Req
 
 	serviceApp := app.createNewServiceApp()
 
-	statusCode, err := services.SendOtpCode(&serviceApp, forgotPasswordDto, "forgotPassword")
+	statusCode, err := services.SendUserOtpCode(&serviceApp, forgotPasswordDto, "forgotPassword")
 
 	if err != nil {
 		log.Println("error login: ", err.Error())
@@ -132,7 +166,7 @@ func (app *application) changePasswordHandlder(w http.ResponseWriter, r *http.Re
 		return
 	}
 	serviceApp := app.createNewServiceApp()
-	statusCode, err := services.ResetPassword(&serviceApp, changePasswordDto)
+	statusCode, err := services.ResetUserPassword(&serviceApp, changePasswordDto)
 
 	if err != nil {
 		log.Println("error change password: ", err.Error())
@@ -165,7 +199,7 @@ func (app *application) verifyEmailHandler(w http.ResponseWriter, r *http.Reques
 
 	serviceApp := app.createNewServiceApp()
 
-	response, statusCode, err := services.VerifyEmail(&serviceApp, verifyOtp)
+	response, statusCode, err := services.VerifyUserEmail(&serviceApp, verifyOtp)
 
 	if err != nil {
 		log.Println("error verifying email: ", err.Error())
@@ -197,7 +231,7 @@ func (app *application) verifyOtpHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	serviceApp := app.createNewServiceApp()
-	statusCode, err := services.VerifyOtpCode(&serviceApp, verifyOtp)
+	statusCode, err := services.VerifyUserOtpCode(&serviceApp, verifyOtp)
 
 	if err != nil {
 		log.Println("error verifying otp code: ", err.Error())
@@ -231,7 +265,7 @@ func (app *application) resendOtpHandler(w http.ResponseWriter, r *http.Request)
 
 	serviceApp := app.createNewServiceApp()
 
-	statusCode, err := services.SendOtpCode(&serviceApp, resendOtpDto, "resendCode")
+	statusCode, err := services.SendUserOtpCode(&serviceApp, resendOtpDto, "resendCode")
 
 	if err != nil {
 		log.Println("error resend otp: ", err.Error())

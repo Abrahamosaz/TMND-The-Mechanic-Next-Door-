@@ -9,6 +9,7 @@ import (
 
 	"github.com/Abrahamosaz/TMND/internal/db"
 	"github.com/Abrahamosaz/TMND/internal/models"
+	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/store"
 
 	"github.com/joho/godotenv"
@@ -69,6 +70,7 @@ func main() {
 	//sendDB
 	seedDB(dbCon)
 
+
 	if err != nil {
 		log.Fatal("Failed migrating database models")
 	}
@@ -94,6 +96,10 @@ func main() {
 		dbConfig: dbConfig,
 		smtp: dialer,
 	}
+
+	//Run cronJob
+	serviceApp := app.createNewServiceApp()
+	services.StartAllBookingCronJobs(&serviceApp)
 
 	mux := app.mount()
 	err = app.run(mux)

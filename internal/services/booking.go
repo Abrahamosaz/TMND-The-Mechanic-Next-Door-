@@ -118,7 +118,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
 
     tx.Commit()
     //set a cronjob to run after one hour to check if the booking has been assigned to a given mechanic
-    go CheckBookingStatusJob(app, &booking)
+    go CheckBookingStatusJob(app, &booking, time.Now())
 	return newBooking, http.StatusCreated, nil
 }
 

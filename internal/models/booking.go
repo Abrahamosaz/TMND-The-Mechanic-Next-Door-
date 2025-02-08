@@ -21,6 +21,7 @@ type Booking struct {
 	PaymentRef 				string 				`gorm:"type:varchar(255);unique" json:"paymentRef"`
 	UserID					uuid.UUID			`json:"userId"`
 	AssignedMechanicID		uuid.UUID			`json:"-"`
+	ErrorMessage 			string 				`json:"errorMessage"`
 	MechanicID				*uuid.UUID			`json:"mechanicId"`
 	Services				[]*Service			`gorm:"many2many:booking_services" json:"services"`
 	ServiceType 			string				`json:"serviceType"`

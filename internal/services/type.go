@@ -31,11 +31,16 @@ type SmtpConfig struct {
 }
 
 
-type VerifyOtpResponse struct {
+type VerifyUserOtpResponse struct {
 	User 	models.User 	`json:"user"`
 	Token 	string			`json:"token"`
 }
 
+
+type VerifyMechanicOtpResponse struct {
+	Mechanic 	models.Mechanic 	`json:"user"`
+	Token 		string			`json:"token"`
+}
 
 type EditProfileInfo struct {
 	UserProfile 	EditProfile

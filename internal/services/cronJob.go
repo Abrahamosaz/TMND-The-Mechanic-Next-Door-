@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Abrahamosaz/TMND/internal/models"
@@ -20,11 +21,11 @@ type BookingStatusChecker struct {
 }
 
 
-func CheckBookingStatusJob(app *Application, booking *models.Booking) {
+func CheckBookingStatusJob(app *Application, booking *models.Booking, currentTime time.Time) {
 	checker := &BookingStatusChecker{
 		App:			app,
         Booking:    	booking,
-        NextCheckTime:  time.Now().Add(time.Hour),
+        NextCheckTime:  currentTime.Add(time.Hour),
     }
     
     // Start the first check after 1 hour
@@ -38,14 +39,14 @@ func (b *BookingStatusChecker) scheduleBookingNextCheck() {
     b.Scheduler = cron.New()
     
     // Create cron expression for the next check
-    cronExpression := fmt.Sprintf("%d %d %d %d %d ?",
+    cronExpression := fmt.Sprintf("%d %d %d %d %d",
         b.NextCheckTime.Minute(),
 		b.NextCheckTime.Hour(),
         b.NextCheckTime.Day(),
         b.NextCheckTime.Month(),
-        b.NextCheckTime.Weekday(),
+		(int(b.NextCheckTime.Weekday()) + 6) % 7 + 1,
     )
-    
+
     _, err := b.Scheduler.AddFunc(cronExpression, func() {
         b.checkBookingStatus()
     })
@@ -57,22 +58,22 @@ func (b *BookingStatusChecker) scheduleBookingNextCheck() {
         return
     }
 
+	log.Printf("CronJob started for booking ID %v - Next check scheduled for %v",
+        b.Booking.ID,
+        b.NextCheckTime.Format("2006-01-02 15:04:05"))
     b.Scheduler.Start()
 }
 
 
 
 func (b *BookingStatusChecker) checkBookingStatus() {
-	// // update the booking execution time
-	// b.Booking.NextExecutionTime = &b.NextCheckTime
-	// go b.App.Store.Booking.UpdateBooking(b.Booking)
-
+	fmt.Println("get here and start")
 	err := b.App.Store.Booking.GetBooking(b.Booking)
 
 	if err != nil {
 		fmt.Printf("Error fetching booking %v: %v\n", b.Booking.ID, err)
-        // Even on error, we'll try again in an hour
-        b.NextCheckTime = time.Now().Add(time.Hour)
+        // Even on error, we'll try again
+        b.NextCheckTime = time.Now().Add(-58 * time.Minute)
         b.scheduleBookingNextCheck()
         return
 	}
@@ -92,19 +93,22 @@ func (b *BookingStatusChecker) checkBookingStatus() {
     if err != nil {
         if errors.Is(err, gorm.ErrRecordNotFound) {
             fmt.Printf("no available mechanics found that aren't blacklisted\n")
+            b.Booking.ErrorMessage = "No mechanic available at this time"
+            b.App.Store.Booking.UpdateBooking(b.Booking)
 			b.stopScheduler()
             return
         }
 		fmt.Printf("error fetching mechanic: %v\n", err.Error())
-		b.stopScheduler()
+        b.NextCheckTime = time.Now().Add(-58 * time.Minute)
+        b.scheduleBookingNextCheck()
         return
     }
 
 	b.Booking.AssignedMechanicID = mechanic.ID 
+    b.NextCheckTime = time.Now().Add(time.Hour)
 	go b.App.Store.Booking.UpdateBooking(b.Booking)
 	
     // Booking still not assigned, schedule next check
-    b.NextCheckTime = time.Now().Add(time.Hour)
     b.scheduleBookingNextCheck()
 }
 
@@ -119,7 +123,27 @@ func (b *BookingStatusChecker) stopScheduler() {
 
 
 
-func StartAllCronJobs() {
-}
+func StartAllBookingCronJobs(app *Application) {
+	// get all the pending bookings
+	bookings, err := app.Store.Booking.GetPendingBookings()
 
+	fmt.Println("all bookigns", len(*bookings))
+	if err != nil {
+		return
+	}
+
+	for _, booking := range *bookings {
+		if  booking.NextExecutionTime == nil {
+			CheckBookingStatusJob(app, &booking, time.Now().Add(-58 * time.Minute))
+			continue
+		}
+
+		if (time.Now().Before(*booking.NextExecutionTime)) {
+			executionTime := *booking.NextExecutionTime
+			CheckBookingStatusJob(app, &booking, executionTime.Add(-time.Hour))
+		} else {
+			CheckBookingStatusJob(app, &booking, time.Now().Add(-58 * time.Minute))
+		}
+	}
+}
 //end of booking cronJobs
