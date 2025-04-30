@@ -11,6 +11,7 @@ import (
 	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/utils"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -105,6 +106,29 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
     }
 
     
+    var encodedVehicleImagesUrl datatypes.JSON
+    var encodedVehicleImagesFilename datatypes.JSON
+
+    if payload.VehicleImagesUrl != nil {
+        encodedVehicleImagesUrl, err = utils.EncodeJSONSlice(payload.VehicleImagesUrl)
+
+        if err != nil {
+            fmt.Println("Error encoding vehicle images url JSON:", err)
+            tx.Rollback()
+            return models.Booking{}, http.StatusInternalServerError, err
+        }
+    }
+
+    if payload.VehicleImagesFilename != nil {
+        encodedVehicleImagesFilename, err = utils.EncodeJSONSlice(payload.VehicleImagesFilename)
+
+        if err != nil {
+            fmt.Println("Error encoding vehicle images filename JSON:", err)
+            tx.Rollback()
+            return models.Booking{}, http.StatusInternalServerError, err
+        }
+    }
+
     // found mechanic
     booking := models.Booking{
 		UserID:     user.ID,
@@ -118,6 +142,8 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
 		BookingFee:     bookingFee.Price,
 		BookingDate:    bookingDate,
 		Status:         models.BookingPending,
+        VehicleImagesUrl: encodedVehicleImagesUrl,
+        VehicleImagesFilename: encodedVehicleImagesFilename,
 	}
 
     //create booking

@@ -33,13 +33,12 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	profileInfo := app.GetProfileInfoFromContext(r)
-	var profileURL = utils.StringToPtr(user.ProfileImageUrl)
-	var fileName = utils.StringToPtr(user.ProfileFileName)
-	
-	if profileInfo != nil {
-		profileURL = profileInfo.URL
-		fileName = profileInfo.FileName
+	profileURL, fileName, ok := app.GetFileInfoFromContext(r)
+
+	if !ok {
+		log.Println("error getting file info from context")
+		app.responseJSON(http.StatusInternalServerError, w,  "internal server error", nil)
+		return
 	}
 
 	// var editProfile services.EditProfile
@@ -54,9 +53,9 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 	editProfile := services.EditProfile{
 		FullName: r.FormValue("fullName"),
 		PhoneNumber: r.FormValue("phoneNumber"),
-		Address: utils.PtrToString(r.FormValue("address")),
-		State:  utils.PtrToString(r.FormValue("state")),
-		Lga: utils.PtrToString(r.FormValue("lga")),
+		Address: utils.StringToPtr(r.FormValue("address")),
+		State:  utils.StringToPtr(r.FormValue("state")),
+		Lga: utils.StringToPtr(r.FormValue("lga")),
 	}
 
 	err = validate.Struct(editProfile)
@@ -69,8 +68,8 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 	serviceApp := app.createNewServiceApp()
 	statusCode, err := services.EditUserProfile(&serviceApp, user.ID, services.EditProfileInfo{
 		UserProfile: editProfile,
-		URL: profileURL,
-		FileName: fileName,
+		URL: *profileURL,
+		FileName: *fileName,
 	})
 
 	if err != nil {

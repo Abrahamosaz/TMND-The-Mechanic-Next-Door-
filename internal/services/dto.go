@@ -63,8 +63,10 @@ type VehicleDetails struct {
 }
 
 type CreateBooking struct {
-	Location 			Location			`json:"location" validate:"required"`
-	Date 				string				`json:"date" validate:"required"`
-	ServiceDetails 		ServiceDetails 		`json:"servicesDetails" validate:"required"`
-	VehicleDetails 		VehicleDetails 		`json:"vehicleDetails" validate:"required"`
+	Location 					Location			`json:"location" validate:"required"`
+	Date 						string				`json:"date" validate:"required"`
+	ServiceDetails 				ServiceDetails 		`json:"servicesDetails" validate:"required"`
+	VehicleDetails 				VehicleDetails 		`json:"vehicleDetails" validate:"required"`
+	VehicleImagesUrl 			[]string			`json:"vehicleImagesUrl"`
+	VehicleImagesFilename 		[]string 			`json:"vehicleImagesFilename"`
 }

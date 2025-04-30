@@ -37,6 +37,8 @@ type Booking struct {
 	Address					string				`json:"address"`
 	BlacklistedMechanics 	datatypes.JSON 		`gorm:"type:jsonb" json:"-"`
 	VisitedMechanics	 	datatypes.JSON 		`gorm:"type:jsonb" json:"-"`
+	VehicleImagesUrl		datatypes.JSON		`gorm:"type:jsonb" json:"vehicleImagesUrl"`
+	VehicleImagesFilename	datatypes.JSON 		`gorm:"type:jsonb" json:"-"`
 	NextExecutionTime		*time.Time			`json:"-"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`

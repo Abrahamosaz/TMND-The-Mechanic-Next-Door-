@@ -33,14 +33,14 @@ func GenerateOtpCode(length int) (string, error) {
 
 
 
-func PtrToString(s string) *string {
+func StringToPtr(s string) *string {
 	if s == "" {
 		return nil
 	}
 	return &s
 }
 
-func StringToPtr(s *string) string {
+func PtrToString(s *string) string {
 	if s == nil {
 		return ""
 	}

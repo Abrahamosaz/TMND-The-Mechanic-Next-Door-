@@ -23,6 +23,7 @@ const mechanicContextKey contextKey = "mechanic"
 
 type uploadContext string
 const uploadContextKey uploadContext = "uploadedFileURL"
+const uploadMultipleFilesContextKey uploadContext = "uploadedFilesURL"
 
 
 type UploadResult struct {
@@ -99,60 +100,162 @@ func (app *application) authenticateJWT(r *http.Request, w http.ResponseWriter, 
 
 
 
-func (app  *application) uploadMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Try to get the uploaded file
-		file, fileHeader, err := r.FormFile("profile-image")
+// Create a middleware generator that takes a file key parameter
+func (app *application) uploadMiddleware(fileKey string, folder string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Try to get the uploaded file using the provided key
+			file, fileHeader, err := r.FormFile(fileKey)
 
-		if err != nil {
-			// If no file is uploaded, continue without modifying the request context
-			if err == http.ErrMissingFile {
-				next.ServeHTTP(w, r)
+			user, ok := app.GetUserFromContext(r)
+
+			if !ok {
+				app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
 				return
 			}
-			log.Printf("File upload error: %s", err.Error())
-			app.responseJSON(http.StatusBadRequest, w, utils.GetUploadErrorMessage(err), nil)
-			return
-		}
-		defer file.Close()
 
-		// Initialize Cloudinary
+			if err != nil {
+				// If no file is uploaded, continue without modifying the request context
+				if err == http.ErrMissingFile {
+					next.ServeHTTP(w, r)
+					return
+				}
+				log.Printf("File upload error: %s", err.Error())
+				app.responseJSON(http.StatusBadRequest, w, utils.GetUploadErrorMessage(err), nil)
+				return
+			}
+			defer file.Close()
 
-		cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
-		cld, err := cloudinary.NewFromURL(cloudinaryUrl) // Replace with your Cloudinary URL
-		if err != nil {
-			log.Printf("Cloudinary setup error: %s", err.Error())
-			app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
-			return
-		}
+			// Initialize Cloudinary
+			cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
+			cld, err := cloudinary.NewFromURL(cloudinaryUrl)
+			if err != nil {
+				log.Printf("Cloudinary setup error: %s", err.Error())
+				app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
+				return
+			}
 
-		// Upload file to Cloudinary
-		ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
-		defer cancel()
-		uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
-			PublicID: fileHeader.Filename, // Use original filename
-			Folder:   CLOUDINARY_PROFILE_IMAGE_FOLDER,           // Upload to "uploads" folder
-			AllowedFormats: CLOUDINARY_ALLOWED_FORMATS,
-			Transformation: CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION,
+			// Upload file to Cloudinary
+			ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+			defer cancel()
+
+			uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+				PublicID: fileHeader.Filename,
+				Folder:   fmt.Sprintf("%s/%s", folder, user.ID),
+				AllowedFormats: CLOUDINARY_ALLOWED_FORMATS,
+				Transformation: CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION,
+			})
+
+			if err != nil {
+				log.Printf("Cloudinary setup error: %s", err.Error())
+				app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
+				return
+			}
+
+			// Add uploaded file URL to request context
+			ctx = context.WithValue(r.Context(), uploadContextKey, &UploadResult{
+				URL:      uploadResult.SecureURL,
+				FileName: fileHeader.Filename,
+			})
+
+			// Call next handler with updated context
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
-
-		if err != nil {
-			log.Printf("Cloudinary setup error: %s", err.Error())
-			app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
-			return
-		}
-
-		// Add uploaded file URL to request context
-		// Define uploadResult struct with exported fields (Uppercase)
-		ctx = context.WithValue(r.Context(), uploadContextKey, &UploadResult{
-			URL:      uploadResult.SecureURL, // Correct field name and reference
-			FileName: uploadResult.OriginalFilename,    // Assign original filename
-		})
-
-		// Call next handler with updated context
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}
 }
+
+
+
+// Create a middleware generator that takes a file key parameter for multiple files
+func (app *application) uploadMultipleFilesMiddleware(fileKey string, folder string) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            // Parse the multipart form with a reasonable size limit (e.g., 32MB)
+            if err := r.ParseMultipartForm(32 << 20); err != nil {
+                log.Printf("Form parsing error: %s", err.Error())
+                app.responseJSON(http.StatusBadRequest, w, "Unable to process the uploaded files. Please ensure each file is less than 32MB and try again.", nil)
+                return
+            }
+
+			user, ok := app.GetUserFromContext(r)
+
+			if !ok {
+				app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+				return
+			}
+
+            // Get all files for the given key
+            files := r.MultipartForm.File[fileKey]
+            if len(files) == 0 {
+                // If no files are uploaded, continue without modifying the request context
+                next.ServeHTTP(w, r)
+                return
+            }
+
+            // Initialize Cloudinary
+            cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
+            cld, err := cloudinary.NewFromURL(cloudinaryUrl)
+            if err != nil {
+                log.Printf("Cloudinary setup error: %s", err.Error())
+                app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
+                return
+            }
+
+            // Create a slice to store all upload results
+            uploadResults := make([]UploadResult, 0, len(files))
+
+            // Create a context with timeout for all uploads
+            ctx, cancel := context.WithTimeout(r.Context(), 120 * time.Second)
+            defer cancel()
+
+            // Process each file
+            for _, fileHeader := range files {
+                // Open the file
+                file, err := fileHeader.Open()
+                if err != nil {
+                    log.Printf("File open error: %s", err.Error())
+                    continue
+                }
+                defer file.Close()
+
+                // Upload file to Cloudinary
+                uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+                    PublicID: fileHeader.Filename,
+        			Folder:   fmt.Sprintf("%s/%s", folder, user.ID),
+                    AllowedFormats: CLOUDINARY_ALLOWED_FORMATS,
+                    Transformation: CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION,
+                })
+
+                if err != nil {
+                    log.Printf("Cloudinary upload error for file %s: %s", fileHeader.Filename, err.Error())
+                    continue
+                }
+
+                // Add to results
+                uploadResults = append(uploadResults, UploadResult{
+                    URL:      uploadResult.SecureURL,
+                    FileName: fileHeader.Filename,
+                })
+            }
+
+			// jsonBytes, _ := json.MarshalIndent(uploadResults, "", "\t")
+			// log.Printf("uploadResults: %v all files", string(jsonBytes))
+
+            // If no files were successfully uploaded, return an error
+            if len(uploadResults) == 0 {
+                app.responseJSON(http.StatusInternalServerError, w, "Failed to upload any files", nil)
+                return
+            }
+
+            // Add uploaded files URLs to request context
+            ctx = context.WithValue(r.Context(), uploadMultipleFilesContextKey, uploadResults)
+
+            // Call next handler with updated context
+            next.ServeHTTP(w, r.WithContext(ctx))
+        })
+    }
+}
+
 
 
 // validateToken parses and verifies the JWT token

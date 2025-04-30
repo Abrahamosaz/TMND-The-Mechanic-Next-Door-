@@ -48,19 +48,51 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	var createBookingDto services.CreateBooking
-	err := json.NewDecoder(r.Body).Decode(&createBookingDto)
 
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+	filesUrl, filenames, ok := app.GetUploadedFilesFromContext(r)
+
+	if !ok {
+		log.Println("error getting uploaded files from context")
+		app.responseJSON(http.StatusInternalServerError, w,  "internal server error", nil)
 		return
 	}
+	
 
-	err = validate.Struct(createBookingDto)
-	if err != nil {
-		ValidateRequestBody(err, w)
-		return
+	// Parse the multipart form data
+    err := r.ParseMultipartForm(10 << 20) // 10 MB max memory
+    if err != nil {
+        app.responseJSON(http.StatusBadRequest, w, "Error parsing form data", nil)
+        return
+    }
+
+    // Create booking DTO from form values
+    var createBookingDto services.CreateBooking
+
+
+	if filesUrl != nil && filenames != nil {
+		createBookingDto.VehicleImagesUrl = filesUrl
+		createBookingDto.VehicleImagesFilename = filenames
 	}
+
+    // Get the form data as JSON string
+    jsonData := r.FormValue("data")
+    if jsonData == "" {
+        app.responseJSON(http.StatusBadRequest, w, "Missing form data", nil)
+        return
+    }
+
+    // Decode the JSON string into the createBookingDto
+    err = json.Unmarshal([]byte(jsonData), &createBookingDto)
+    if err != nil {
+        app.responseJSON(http.StatusBadRequest, w, "Invalid JSON in form data", nil)
+        return
+    }
+
+    err = validate.Struct(createBookingDto)
+    if err != nil {
+        ValidateRequestBody(err, w)
+        return
+    }
 
 	serviceApp := app.createNewServiceApp()
 	newBooking, statusCode, err := services.CreateUserBooking(&serviceApp, createBookingDto, user)

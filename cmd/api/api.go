@@ -83,7 +83,7 @@ func (app *application) mount() http.Handler {
 		rootRouter.Route("/user", func(userRouter chi.Router) {
 			userRouter.Use(app.userAuthMiddleware)
 			userRouter.Get("/get-user", app.getUserHandler)
-			userRouter.With(app.uploadMiddleware).Put("/edit-profile", app.editUserProfileHandler)
+			userRouter.With(app.uploadMiddleware("profile-image", CLOUDINARY_PROFILE_IMAGE_FOLDER)).Put("/edit-profile", app.editUserProfileHandler)
 			
 			// booking routes
 			userRouter.Route("/booking", func(bookingRouter chi.Router) {
@@ -92,11 +92,12 @@ func (app *application) mount() http.Handler {
 				bookingRouter.Get("/get-booking-fee", app.getBookingFeeHandler)
 				bookingRouter.Get("/get-vehicle-details", app.getVehicleDetailsHandlder)
 				bookingRouter.Get("/get-disabled-date", app.getDisabledDateHanlder)
-				bookingRouter.Post("/create-booking", app.createBookingHandler)
+				bookingRouter.With(app.uploadMultipleFilesMiddleware("vehicle-images", CLOUDINARY_VEHICLE_IMAGE_FOLDER)).Post("/create-booking", app.createBookingHandler)
 			})
 
 			//service routes
 			userRouter.Route("/service", func(serviceRouter chi.Router) {
+				// serviceRouter.Get("", app.)
 				serviceRouter.Get("/get-service-categories", app.getServicesHandler)
 			})
 
@@ -169,7 +170,7 @@ func (app *application) createNewServiceApp()  services.Application {
 	}
 }
 
-func (app *application) responseJSON(statusCode int, w http.ResponseWriter, message string, data interface {}) {
+func (app *application) responseJSON(statusCode int, w http.ResponseWriter, message string, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if v, ok := data.([]string); ok && len(v) == 0 {
@@ -188,10 +189,30 @@ func (app *application) GetUserFromContext(r *http.Request) (*models.User, bool)
 	return user, ok
 }
 
-func (app *application) GetProfileInfoFromContext(r *http.Request) (*UploadResult) {
-	user, ok := r.Context().Value(uploadContextKey).(*UploadResult)
+func (app *application) GetFileInfoFromContext(r *http.Request) (*string, *string, bool) {
+	fileInfo, ok := r.Context().Value(uploadContextKey).(*UploadResult)
 	if !ok {
-		return nil
+		return nil, nil, false
 	}
-	return user
+	return &fileInfo.URL, &fileInfo.FileName, true
+}
+
+
+func (app *application) GetUploadedFilesFromContext(r *http.Request) ([]string, []string, bool) {
+	// Get the upload results from context
+	uploadResults, ok := r.Context().Value(uploadMultipleFilesContextKey).([]UploadResult)
+	if !ok {
+		return nil, nil, false
+	}
+
+	// Extract URLs and filenames into separate slices
+	urls := make([]string, len(uploadResults))
+	filenames := make([]string, len(uploadResults))
+	
+	for i, result := range uploadResults {
+		urls[i] = result.URL
+		filenames[i] = result.FileName
+	}
+
+	return urls, filenames, true
 }
