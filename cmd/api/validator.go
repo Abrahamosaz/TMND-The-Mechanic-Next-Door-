@@ -32,7 +32,7 @@ func ValidateRequestBody(err error, w http.ResponseWriter) {
 	}
 
 	// Custom response format
-	response := map[string]interface{}{
+	response := map[string]any{
 		"message":    "Bad Request",
 		"statusCode": http.StatusBadRequest, // HTTP status code
 		"errors":     validationErrors,

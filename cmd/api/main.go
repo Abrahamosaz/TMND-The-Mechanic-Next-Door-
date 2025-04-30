@@ -55,7 +55,7 @@ func main() {
 	// enable uuid extension
 	db.EnableUUIDExtension(dbCon)
 
-	// migrate models
+	// migrate models only for development purpose
 	err = dbCon.AutoMigrate(
 		&models.User{},
 		&models.Mechanic{},

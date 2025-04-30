@@ -49,14 +49,7 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 
-	filesUrl, filenames, ok := app.GetUploadedFilesFromContext(r)
-
-	if !ok {
-		log.Println("error getting uploaded files from context")
-		app.responseJSON(http.StatusInternalServerError, w,  "internal server error", nil)
-		return
-	}
-	
+	filesUrl, filenames, _ := app.GetUploadedFilesFromContext(r)
 
 	// Parse the multipart form data
     err := r.ParseMultipartForm(10 << 20) // 10 MB max memory

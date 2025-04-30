@@ -1,7 +1,5 @@
 package templates
 
-import "fmt"
-
 
 func OtpEmail(fullName string, otpCode string, page string) string {
 
@@ -11,8 +9,6 @@ func OtpEmail(fullName string, otpCode string, page string) string {
 	} else if page == "forgotPassword" {
 		title = "Reset Your Password"
 	}
-
-	fmt.Println("title", title)
 	
 	return `
 	<html lang='en'>

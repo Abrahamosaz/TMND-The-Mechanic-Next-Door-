@@ -98,8 +98,6 @@ func (app *application) authenticateJWT(r *http.Request, w http.ResponseWriter, 
 }
 
 
-
-
 // Create a middleware generator that takes a file key parameter
 func (app *application) uploadMiddleware(fileKey string, folder string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -163,7 +161,6 @@ func (app *application) uploadMiddleware(fileKey string, folder string) func(htt
 		})
 	}
 }
-
 
 
 // Create a middleware generator that takes a file key parameter for multiple files
@@ -255,8 +252,6 @@ func (app *application) uploadMultipleFilesMiddleware(fileKey string, folder str
         })
     }
 }
-
-
 
 // validateToken parses and verifies the JWT token
 func validateToken(tokenString string) (*utils.MyCustomClaims, error) {
