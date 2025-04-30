@@ -26,11 +26,14 @@ type Mechanic struct {
 	Rating					float64		    `gorm:"default:5.0" json:"rating"`
 	Experience				int 		    `json:"experience"`	// years of experience
 	IsAvailable 			bool		    `gorm:"type:bool;default:false" json:"isAvailable"`
-	Bookings				[]Booking	    `gorm:"foreignKey:MechanicID" json:"bookings"`
-    Transactions            []Transaction   `gorm:"foreignKey:MechanicID" json:"transactions"`
     Balance                 float64         `gorm:"default:0.0" json:"balance"`
 	CreatedAt 		        time.Time       `json:"createdAt"`
     UpdatedAt 		        time.Time       `json:"updatedAt"`
+    
+    //relationships
+	Bookings				[]Booking	    `gorm:"foreignKey:MechanicID" json:"bookings"`
+    Transactions            []Transaction   `gorm:"foreignKey:MechanicID" json:"transactions"`
+    
 }
 
 

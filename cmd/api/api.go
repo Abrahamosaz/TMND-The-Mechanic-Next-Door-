@@ -41,7 +41,7 @@ type smtpConfig struct {
 type Response struct {
 	Message 	string 			`json:"message"`
 	StatusCode 	int 			`json:"statusCode"`
-	Data  		interface {} 	`json:"data"`
+	Data  		any				`json:"data"`
 }
 
 
@@ -87,6 +87,8 @@ func (app *application) mount() http.Handler {
 			
 			// booking routes
 			userRouter.Route("/booking", func(bookingRouter chi.Router) {
+				bookingRouter.Get("/get-bookings", app.getBookingsHandler)
+				bookingRouter.Post("/cancel-booking/{id}", app.cancelBookingHandler)
 				bookingRouter.Get("/get-booking-fee", app.getBookingFeeHandler)
 				bookingRouter.Get("/get-vehicle-details", app.getVehicleDetailsHandlder)
 				bookingRouter.Get("/get-disabled-date", app.getDisabledDateHanlder)
@@ -100,7 +102,7 @@ func (app *application) mount() http.Handler {
 
 			//transaction routes
 			userRouter.Route("/transaction", func(trxRouter chi.Router) {
-				// trxRouter.Get()
+				trxRouter.Get("/", app.getUserTransactionHandler)
 			})
 		})
 
@@ -111,8 +113,8 @@ func (app *application) mount() http.Handler {
 
 			// booking routes
 			mechanicRouter.Route("/booking", func(bookingRouter chi.Router) {
-				bookingRouter.Get("/reject", app.rejectBookingHandler)
-				bookingRouter.Get("/accept", app.acceptBookingHandler)
+				bookingRouter.Post("/reject", app.rejectBookingHandler)
+				bookingRouter.Post("/accept", app.acceptBookingHandler)
 			})
 
 

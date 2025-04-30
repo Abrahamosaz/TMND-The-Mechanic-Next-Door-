@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	mathRand "math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -105,3 +106,12 @@ func GenerateUniqueTrxRef(trxType string) (string, error) {
 	// Return formatted transaction reference
 	return fmt.Sprintf("%s_%s", trxType, uniqueID), nil
 }
+
+
+func ConvertStrToPtrInt(s string) *int {
+	sInt, err := strconv.Atoi(s)
+	if err != nil {
+		return nil
+	}
+	return &sInt
+} 

@@ -5,7 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/services"
+	"github.com/Abrahamosaz/TMND/internal/utils"
+	"github.com/go-chi/chi/v5"
 )
 
 
@@ -35,7 +38,6 @@ func (app *application) getDisabledDateHanlder(w http.ResponseWriter, r *http.Re
 
 	app.responseJSON(statusCode, w, "User disabled dates retrieve successfully", disabledDates)
 }
-
 
 
 func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +83,7 @@ func (app *application) getBookingFeeHandler(w http.ResponseWriter, r *http.Requ
 	serviceApp := app.createNewServiceApp()
 	fee, statusCode, err := services.GetBookingFee(&serviceApp)
 
-		if err != nil {
+	if err != nil {
 		log.Println("error getting booking fee: ", err.Error())
 		message := err.Error()
 		if (statusCode == http.StatusInternalServerError) {
@@ -93,6 +95,76 @@ func (app *application) getBookingFeeHandler(w http.ResponseWriter, r *http.Requ
 
 	app.responseJSON(statusCode, w, "Booking fee retrieve successfully", fee)
 
+}
+
+
+func (app *application) cancelBookingHandler(w http.ResponseWriter, r *http.Request) {
+	bookingID := chi.URLParam(r, "id")
+	serviceApp := app.createNewServiceApp()
+	statusCode, err := services.CancelBooking(&serviceApp, bookingID)
+
+	if err != nil {
+		log.Println("error canceling booking: ", err.Error())
+		message := err.Error()
+		if (statusCode == http.StatusInternalServerError) {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+
+	app.responseJSON(statusCode, w, "Booking cancelled successfully", nil)
+}
+
+
+func (app *application) getBookingsHandler(w http.ResponseWriter, r *http.Request) {
+
+	user, ok := app.GetUserFromContext(r)
+
+	if !ok {
+		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		return
+	}
+
+	//get query strings
+	qs := r.URL.Query()
+
+	page := qs.Get("page")
+	if page == "" {
+		page = "1"
+	}
+	limit := qs.Get("limit")
+	if limit == "" {
+		limit = "10"
+	}
+
+	search := qs.Get("search")
+	status := qs.Get("status")
+
+	serviceApp := app.createNewServiceApp()
+	bookings, statusCode, err := services.GetUserBookings(&serviceApp,
+		user, 
+		&models.FilterQuery{
+			Search: &search,
+			Status: &status,
+			PaginationQuery: &models.PaginationQuery{
+				Page: utils.ConvertStrToPtrInt(page),
+				Limit: utils.ConvertStrToPtrInt(limit),
+			},
+		},
+	)
+
+	if err != nil {
+		log.Println("error getting bookings: ", err.Error())
+		message := err.Error()
+		if (statusCode == http.StatusInternalServerError) {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+
+	app.responseJSON(statusCode, w, "Bookings retrieved successfully", bookings)
 }
 
 

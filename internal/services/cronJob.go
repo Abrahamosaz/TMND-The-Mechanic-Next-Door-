@@ -1,12 +1,14 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/Abrahamosaz/TMND/internal/models"
+	"github.com/Abrahamosaz/TMND/internal/utils"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
@@ -35,6 +37,7 @@ func CheckBookingStatusJob(app *Application, booking *models.Booking, currentTim
 
 
 func (b *BookingStatusChecker) scheduleBookingNextCheck() {
+    b.stopScheduler()
     // Create a new cron scheduler
     b.Scheduler = cron.New()
     
@@ -44,7 +47,7 @@ func (b *BookingStatusChecker) scheduleBookingNextCheck() {
 		b.NextCheckTime.Hour(),
         b.NextCheckTime.Day(),
         b.NextCheckTime.Month(),
-		(int(b.NextCheckTime.Weekday()) + 6) % 7 + 1,
+        b.NextCheckTime.Weekday(),
     )
 
     _, err := b.Scheduler.AddFunc(cronExpression, func() {
@@ -67,13 +70,12 @@ func (b *BookingStatusChecker) scheduleBookingNextCheck() {
 
 
 func (b *BookingStatusChecker) checkBookingStatus() {
-	fmt.Println("get here and start")
 	err := b.App.Store.Booking.GetBooking(b.Booking)
 
 	if err != nil {
 		fmt.Printf("Error fetching booking %v: %v\n", b.Booking.ID, err)
         // Even on error, we'll try again
-        b.NextCheckTime = time.Now().Add(-58 * time.Minute)
+        b.NextCheckTime = time.Now().Add(2 * time.Minute)
         b.scheduleBookingNextCheck()
         return
 	}
@@ -88,9 +90,28 @@ func (b *BookingStatusChecker) checkBookingStatus() {
 	}
 
 	// assign the booking to another mechanic
-	mechanic, err := b.App.Store.Mechanic.GetAvailableMechanic(b.Booking.BlacklistedMechanics)
+    var blackListedIDS []string
+    var visitedIDS []string
+
+    err = utils.DecodeJSONSlice(b.Booking.BlacklistedMechanics, &blackListedIDS)
+    if err != nil {
+        fmt.Println("Error decoding blackListedIDS JSON:", err)
+        b.stopScheduler()
+        return
+    }
+
+    err = utils.DecodeJSONSlice(b.Booking.VisitedMechanics, &visitedIDS)
+    if err != nil {
+        fmt.Println("Error decoding visitedIDS JSON:", err)
+        b.stopScheduler()
+        return
+    }
+
+
+	mechanic, err := b.App.Store.Mechanic.GetAvailableMechanic(blackListedIDS, visitedIDS)
 
     if err != nil {
+        fmt.Printf("error fetching mechanic: %v\n", err.Error())
         if errors.Is(err, gorm.ErrRecordNotFound) {
             fmt.Printf("no available mechanics found that aren't blacklisted\n")
             b.Booking.ErrorMessage = "No mechanic available at this time"
@@ -98,13 +119,29 @@ func (b *BookingStatusChecker) checkBookingStatus() {
 			b.stopScheduler()
             return
         }
-		fmt.Printf("error fetching mechanic: %v\n", err.Error())
-        b.NextCheckTime = time.Now().Add(-58 * time.Minute)
+
+        if err.Error() == "no available mechanics found" {
+            emptyJSON, _ := json.Marshal([]string{})
+            b.Booking.VisitedMechanics = emptyJSON
+            b.App.Store.Booking.UpdateBooking(b.Booking)
+        }
+
+        b.NextCheckTime = time.Now().Add(2 * time.Minute)
         b.scheduleBookingNextCheck()
         return
     }
 
-	b.Booking.AssignedMechanicID = mechanic.ID 
+    newVisitedIDS := append(visitedIDS, mechanic.ID.String())
+    newVisitedJsonIDS , err := utils.EncodeJSONSlice(newVisitedIDS)
+
+    if err != nil {
+        fmt.Println("Error encoding newVisitedIDS JSON:", err)
+        b.stopScheduler()
+        return
+    }
+
+    b.Booking.VisitedMechanics = newVisitedJsonIDS
+	b.Booking.AssignedMechanicID = mechanic.ID
     b.NextCheckTime = time.Now().Add(time.Hour)
 	go b.App.Store.Booking.UpdateBooking(b.Booking)
 	
@@ -120,7 +157,6 @@ func (b *BookingStatusChecker) stopScheduler() {
         b.Scheduler = nil
     }
 }
-
 
 
 func StartAllBookingCronJobs(app *Application) {

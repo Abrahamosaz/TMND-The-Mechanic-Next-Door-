@@ -23,10 +23,13 @@ type User struct {
     State                   *string         `json:"state"`
     Lga                     *string         `json:"lga"`
     Balance                 float64         `gorm:"default:0.0" json:"balance"`
-    Bookings				[]Booking   	`gorm:"foreignKey:UserID" json:"bookings"`
-    Transactions            []Transaction   `gorm:"foreignKey:UserID" json:"transactions"`
     CreatedAt 		        time.Time       `json:"createdAt"`
     UpdatedAt 		        time.Time       `json:"updatedAt"`
+    
+    //relationships
+    Bookings				[]Booking   	`gorm:"foreignKey:UserID" json:"bookings"`
+    Transactions            []Transaction   `gorm:"foreignKey:UserID" json:"transactions"`
+
 }
 
 

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/utils"
 )
@@ -82,4 +83,47 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	app.responseJSON(statusCode, w, "User profile updated successfully", nil)
+}
+
+
+
+func (app *application) getUserTransactionHandler(w http.ResponseWriter, r *http.Request) {
+	user, ok := app.GetUserFromContext(r)
+
+	if !ok {
+		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		return
+	}
+
+	//get query strings
+	qs := r.URL.Query()
+
+	page := qs.Get("page")
+	if page == "" {
+		page = "1"
+	}
+	
+	limit := qs.Get("limit")
+	if limit == "" {
+		limit = "10"
+	}
+
+	serviceApp := app.createNewServiceApp()
+	trxs, statusCode, err := services.GetUserTransaction(
+		&serviceApp,
+		user,
+		&models.PaginationQuery{Page: utils.ConvertStrToPtrInt(page), Limit: utils.ConvertStrToPtrInt(limit)},
+	)
+
+	if err != nil {
+		log.Println("error getting user transactions: ", err.Error())
+		message := err.Error()
+		if statusCode == http.StatusInternalServerError {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+	app.responseJSON(statusCode, w, "User transactions retrieved successfully", trxs)
+
 }

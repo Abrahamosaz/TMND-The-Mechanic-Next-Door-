@@ -88,6 +88,23 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
             return models.Booking{}, http.StatusInternalServerError, err
     }
 
+
+    //create a new Vehicle
+    vehicle := models.Vehicle{
+        Vtype: payload.VehicleDetails.VehicleType,
+        Brand: payload.VehicleDetails.Brand,
+        Size: payload.VehicleDetails.Size,
+        Model: payload.VehicleDetails.Model,
+    }
+    
+    newVehicle, err := app.Store.Vehicle.Create(tx, vehicle)
+
+    if err != nil {
+        tx.Rollback()
+        return models.Booking{}, http.StatusInternalServerError, err
+    }
+
+    
     // found mechanic
     booking := models.Booking{
 		UserID:     user.ID,
@@ -97,12 +114,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
         Longitude: payload.Location.Lng,
         Address: payload.Location.Address,
         AssignedMechanicID: temporaryMechanic.ID,
-		Vehicle: models.Vehicle{
-            Vtype: payload.VehicleDetails.VehicleType,
-            Brand: payload.VehicleDetails.Brand,
-            Size: payload.VehicleDetails.Size,
-            Model: payload.VehicleDetails.Model,
-		},
+		VehicleID:  newVehicle.ID,
 		BookingFee:     bookingFee.Price,
 		BookingDate:    bookingDate,
 		Status:         models.BookingPending,
@@ -118,7 +130,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
 
     tx.Commit()
     //set a cronjob to run after one hour to check if the booking has been assigned to a given mechanic
-    go CheckBookingStatusJob(app, &booking, time.Now())
+    go CheckBookingStatusJob(app, &newBooking, time.Now())
 	return newBooking, http.StatusCreated, nil
 }
 
@@ -131,6 +143,50 @@ func GetBookingFee(app *Application)  (BookingFeeResponse, int, error) {
 	}
 
 	return BookingFeeResponse{Fee: bookingFee.Price}, http.StatusOK, nil
+}
+
+
+func CancelBooking(app *Application, bookingID string) (int, error) {
+
+    parsedBookingID, err := uuid.Parse(bookingID)
+    if err != nil {
+        return http.StatusBadGateway, errors.New("error parsing booking id")
+    }
+
+    booking := &models.Booking{ID: parsedBookingID}
+    err = app.Store.Booking.GetBooking(booking)
+
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return http.StatusNotFound, errors.New("booking not found")
+        }
+        return http.StatusInternalServerError, err
+    }
+
+    if (booking.Status == models.BookingCancelled) {
+        return http.StatusConflict, errors.New("booking already cancelled")
+    }
+
+    booking.Status = models.BookingCancelled
+    err = app.Store.Booking.UpdateBooking(booking)
+
+    if err != nil {
+        return http.StatusInternalServerError, err
+    }
+
+    return http.StatusOK, nil
+}
+
+
+func GetUserBookings(app *Application, user *models.User, qs *models.FilterQuery) (*models.PaginationResponse[models.Booking], int, error) {
+
+    bookings, err := app.Store.Booking.GetUserBookings(user, qs)
+
+    if err != nil {
+        return nil, http.StatusInternalServerError, err
+    }
+
+    return bookings, http.StatusOK, nil
 }
 
 
@@ -201,7 +257,7 @@ func GetDisabledDatesForUser(app *Application, user *models.User) ([]string, int
 
 
 func getMechanicForBooking(app *Application, ch chan<- models.Mechanic, errCh chan<- error) {
-    mechanic, err := app.Store.Mechanic.GetAvailableMechanic([]string{})
+    mechanic, err := app.Store.Mechanic.GetAvailableMechanic([]string{}, []string{})
 
     if err != nil {
         if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -22,10 +22,11 @@ type Storage struct {
 		Create(*gorm.DB, models.Mechanic) (models.Mechanic, error)
 		Save(*models.Mechanic) error
 		GetAllAvailableMechanics() (*[]models.Mechanic, error)
-		GetAvailableMechanic([]string) (*models.Mechanic, error)
+		GetAvailableMechanic([]string, []string) (*models.Mechanic, error)
 	}
 	Booking interface {
 		GetPendingBookings() (*[]models.Booking, error)
+		GetUserBookings(*models.User, *models.FilterQuery) (*models.PaginationResponse[models.Booking], error)
 		Create(*gorm.DB, models.Booking) (models.Booking, error)
 		GetBookingFee() (models.BookingFee, error)
 		GetBooking(*models.Booking) error
@@ -37,6 +38,10 @@ type Storage struct {
 	}
 	Transaction interface {
 		Create(*gorm.DB, *models.Transaction) error
+		GetUserTransactions(*models.User, *models.PaginationQuery) (*models.PaginationResponse[models.Transaction], error)
+	}
+	Vehicle interface {
+		Create(*gorm.DB, models.Vehicle) (models.Vehicle, error)
 	}
 }
 
@@ -51,5 +56,6 @@ func PostgresStorage(db *gorm.DB) Storage {
 		Booking: &postgres.BookingRepository{DB: db},
 		Service: &postgres.ServiceRepository{DB: db},
 		Transaction: &postgres.TransactionRepository{DB: db},
+		Vehicle: &postgres.VehicleRepository{DB: db},
 	}
 }

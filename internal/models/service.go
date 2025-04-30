@@ -12,9 +12,12 @@ type ServiceCategory struct {
 	ID        		        uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
 	Name					string		`json:"name"`
 	Description				string		`json:"description"`
-	Services				[]Service	`gorm:"foreignKey:ServiceCategoryID" json:"services"`
 	CreatedAt 		        time.Time   `json:"createdAt"`
     UpdatedAt 		        time.Time   `json:"updatedAt"`
+	
+	//relationships
+	Services				[]Service	`gorm:"foreignKey:ServiceCategoryID" json:"services"`
+	
 }
 
 

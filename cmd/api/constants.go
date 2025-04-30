@@ -87,7 +87,6 @@ var VEHICLE_BRANDS = []vehicleConstants{
 }
 
 
-
 func generateVehicleModels() []vehicleConstants {
 	currentYear := time.Now().Year()
 	vehicleModels := make([]vehicleConstants, 0)

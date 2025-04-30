@@ -28,7 +28,6 @@ func (mechanicRepo *MechanicRepository) FindByEmail(email string) (models.Mechan
 }
 
 
-
 func (mechanicRepo *MechanicRepository) Create(tx *gorm.DB, mechanic models.Mechanic) (models.Mechanic, error) {
 	return models.Mechanic{}, nil
 }
@@ -58,15 +57,20 @@ func (mechanicRepo *MechanicRepository) GetAllAvailableMechanics() (*[]models.Me
 }
 
 
-func (mechanicRepo *MechanicRepository) GetAvailableMechanic(blackListedIDS []string) (*models.Mechanic, error) {
+func (mechanicRepo *MechanicRepository) GetAvailableMechanic(blackListedIDS []string, visitedIDS []string) (*models.Mechanic, error) {
 	var mechanic models.Mechanic
 	var highestRating float64
 
 	query := mechanicRepo.DB.Model(&models.Mechanic{}).
 		Where("is_available = ?", true)
 
+
+	if len(visitedIDS) > 0 {
+		query = query.Where("id NOT IN ?", visitedIDS)
+	}
+
 	if len(blackListedIDS) > 0 {
-		query = query.Where("id NOT IN (?)", blackListedIDS)
+		query = query.Where("id NOT IN ?", blackListedIDS)
 	}
 
 	for {
@@ -77,7 +81,10 @@ func (mechanicRepo *MechanicRepository) GetAvailableMechanic(blackListedIDS []st
 
 		// No available mechanics left
 		if highestRating == 0 {
-			return nil, errors.New("no available mechanics found")
+			if len(visitedIDS) > 0 {
+				return nil, errors.New("no available mechanics found")
+			}
+			return nil, gorm.ErrRecordNotFound
 		}
 
 		ratingQuery := mechanicRepo.DB.
@@ -87,7 +94,11 @@ func (mechanicRepo *MechanicRepository) GetAvailableMechanic(blackListedIDS []st
 
 		// Apply blacklist filtering only if necessary
 		if len(blackListedIDS) > 0 {
-			ratingQuery = ratingQuery.Where("id NOT IN (?)", blackListedIDS)
+			ratingQuery = ratingQuery.Where("id NOT IN ?", blackListedIDS)
+		}
+
+		if len(visitedIDS) > 0 {
+			ratingQuery = ratingQuery.Where("id NOT IN ?", visitedIDS)
 		}
 
 		result := ratingQuery.First(&mechanic)

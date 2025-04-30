@@ -28,6 +28,10 @@ type Transaction struct {
 	Amount					float64				`json:"amount"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`
+
+	//relationships
+	// User        			*User   			`gorm:"foreignKey:UserID" json:"user"`
+	// Mechanic        		*Mechanic   		`gorm:"foreignKey:MechanicID" json:"mechanic"`
 }
 
 

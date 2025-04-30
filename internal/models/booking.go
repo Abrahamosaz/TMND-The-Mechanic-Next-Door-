@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,7 @@ const (
 	BookingPending BookingStatus = "pending"
 	BookingBooked BookingStatus = "booked"
 	BookingCancelled BookingStatus = "cancelled"
+	BookingCompleted BookingStatus = "completed"
 )
 
 
@@ -21,12 +23,11 @@ type Booking struct {
 	PaymentRef 				string 				`gorm:"type:varchar(255);unique" json:"paymentRef"`
 	UserID					uuid.UUID			`json:"userId"`
 	AssignedMechanicID		uuid.UUID			`json:"-"`
+	VehicleID               uuid.UUID           `gorm:"type:uuid;not null;uniqueIndex" json:"vehicleId"`
 	ErrorMessage 			string 				`json:"errorMessage"`
 	MechanicID				*uuid.UUID			`json:"mechanicId"`
-	Services				[]*Service			`gorm:"many2many:booking_services" json:"services"`
 	ServiceType 			string				`json:"serviceType"`
 	ServiceDescription		*string				`json:"serviceDescription"`		
-	Vehicle 				Vehicle				`gorm:"foreignKey:BookingID" json:"vehicle"`
 	EstimatedPrice			float64				`gorm:"default:0.0" json:"estimatedPrice"`
 	BookingFee				float64				`gorm:"default:0.0" json:"bookingFee"`
 	BookingDate				time.Time			`json:"bookingDate"`
@@ -34,10 +35,18 @@ type Booking struct {
 	Latitude				float64				`json:"latitude"`
 	Longitude				float64				`json:"longitude"`
 	Address					string				`json:"address"`
-	BlacklistedMechanics 	[]string 			`gorm:"type:jsonb" json:"-"`
+	BlacklistedMechanics 	datatypes.JSON 		`gorm:"type:jsonb" json:"-"`
+	VisitedMechanics	 	datatypes.JSON 		`gorm:"type:jsonb" json:"-"`
 	NextExecutionTime		*time.Time			`json:"-"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`
+	
+	//relationships
+	Vehicle                 *Vehicle            `gorm:"foreignKey:VehicleID;constraint:OnDelete:CASCADE;" json:"vehicle"`
+	User        			*User   			`gorm:"foreignKey:UserID" json:"-"`
+	Mechanic        		*Mechanic   		`gorm:"foreignKey:MechanicID" json:"mechanic"`
+	Services				[]*Service			`gorm:"many2many:booking_services" json:"services"`
+	
 }
 
 

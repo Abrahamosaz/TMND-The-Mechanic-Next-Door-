@@ -12,17 +12,17 @@ import (
 	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/store"
 
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 	gomail "gopkg.in/mail.v2"
 )
 
 
 func main() {
 	// for  development purpose
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	
 	port := os.Getenv("PORT")
 

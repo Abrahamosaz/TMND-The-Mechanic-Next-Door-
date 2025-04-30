@@ -28,3 +28,15 @@ func EditUserProfile(app *Application, userId uuid.UUID, editInfo EditProfileInf
 
 	return http.StatusOK, nil	
 }
+
+
+func GetUserTransaction(app *Application, user *models.User, qs *models.PaginationQuery) (*models.PaginationResponse[models.Transaction], int, error) {
+
+	transactions, err := app.Store.Transaction.GetUserTransactions(user, qs)
+
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	return transactions, http.StatusOK, nil
+}

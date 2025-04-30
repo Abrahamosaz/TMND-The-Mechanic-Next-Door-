@@ -14,10 +14,8 @@ type Vehicle struct {
 	Brand					string		`gorm:"type:varchar(20)" json:"brand"`
 	Size					string		`gorm:"type:varchar(10)" json:"size"`
 	Model					int			`json:"model"`
-	BookingID 				uuid.UUID	`json:"bookingId"`
 	CreatedAt 		        time.Time   `json:"createdAt"`
     UpdatedAt 		        time.Time   `json:"updatedAt"`
-
 }
 
 func (Vehicle) TableName() string {
