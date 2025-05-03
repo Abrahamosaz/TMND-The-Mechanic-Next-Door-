@@ -33,7 +33,7 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	profileURL, fileName, _ := app.GetFileInfoFromContext(r)
+	profileURL, fileName, publicId, _ := app.GetFileInfoFromContext(r)
 
 	// var editProfile services.EditProfile
 	err := r.ParseMultipartForm(10 << 20) // 10MB max size
@@ -64,12 +64,13 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 	var editProfileInfo services.EditProfileInfo
 	editProfileInfo.UserProfile = editProfile
 
-	if profileURL != nil && fileName != nil {
+	if profileURL != nil && fileName != nil && publicId != nil {
 		editProfileInfo.URL = *profileURL
 		editProfileInfo.FileName = *fileName
+		editProfileInfo.PublicId = *publicId
 	}
 
-	statusCode, err := services.EditUserProfile(&serviceApp, user.ID, editProfileInfo)
+	statusCode, err := services.EditUserProfile(&serviceApp, user, editProfileInfo)
 
 	if err != nil {
 		log.Println("error editing user profile: ", err.Error())

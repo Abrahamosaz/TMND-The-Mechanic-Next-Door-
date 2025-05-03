@@ -23,6 +23,7 @@ type User struct {
     State                   *string         `json:"state"`
     Lga                     *string         `json:"lga"`
     Balance                 float64         `gorm:"default:0.0" json:"balance"`
+    PublicId                *string         `json:"-"`
     CreatedAt 		        time.Time       `json:"createdAt"`
     UpdatedAt 		        time.Time       `json:"updatedAt"`
     

@@ -10,6 +10,7 @@ import (
 	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/store"
+	"github.com/Abrahamosaz/TMND/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	gomail "gopkg.in/mail.v2"
@@ -83,7 +84,7 @@ func (app *application) mount() http.Handler {
 		rootRouter.Route("/user", func(userRouter chi.Router) {
 			userRouter.Use(app.userAuthMiddleware)
 			userRouter.Get("/get-user", app.getUserHandler)
-			userRouter.With(app.uploadMiddleware("profile-image", CLOUDINARY_PROFILE_IMAGE_FOLDER)).Put("/edit-profile", app.editUserProfileHandler)
+			userRouter.With(app.uploadMiddleware("profile-image", utils.CLOUDINARY_PROFILE_IMAGE_FOLDER)).Put("/edit-profile", app.editUserProfileHandler)
 			
 			// booking routes
 			userRouter.Route("/booking", func(bookingRouter chi.Router) {
@@ -92,7 +93,7 @@ func (app *application) mount() http.Handler {
 				bookingRouter.Get("/get-booking-fee", app.getBookingFeeHandler)
 				bookingRouter.Get("/get-vehicle-details", app.getVehicleDetailsHandlder)
 				bookingRouter.Get("/get-disabled-date", app.getDisabledDateHanlder)
-				bookingRouter.With(app.uploadMultipleFilesMiddleware("vehicle-images", CLOUDINARY_VEHICLE_IMAGE_FOLDER)).Post("/create-booking", app.createBookingHandler)
+				bookingRouter.With(app.uploadMultipleFilesMiddleware("vehicle-images", utils.CLOUDINARY_VEHICLE_IMAGE_FOLDER)).Post("/create-booking", app.createBookingHandler)
 			})
 
 			//service routes
@@ -129,9 +130,6 @@ func (app *application) mount() http.Handler {
 	
 	return router
 }
-
-
-
 
 
 func (app *application) run(mux http.Handler) (error) {
@@ -189,30 +187,32 @@ func (app *application) GetUserFromContext(r *http.Request) (*models.User, bool)
 	return user, ok
 }
 
-func (app *application) GetFileInfoFromContext(r *http.Request) (*string, *string, bool) {
-	fileInfo, ok := r.Context().Value(uploadContextKey).(*UploadResult)
+func (app *application) GetFileInfoFromContext(r *http.Request) (*string, *string, *string, bool) {
+	fileInfo, ok := r.Context().Value(uploadContextKey).(*utils.UploadResult)
 	if !ok {
-		return nil, nil, false
+		return nil, nil, nil, false
 	}
-	return &fileInfo.URL, &fileInfo.FileName, true
+	return &fileInfo.URL, &fileInfo.FileName, &fileInfo.PublicID, true
 }
 
 
-func (app *application) GetUploadedFilesFromContext(r *http.Request) ([]string, []string, bool) {
+func (app *application) GetUploadedFilesFromContext(r *http.Request) ([]string, []string, []string, bool) {
 	// Get the upload results from context
-	uploadResults, ok := r.Context().Value(uploadMultipleFilesContextKey).([]UploadResult)
+	uploadResults, ok := r.Context().Value(uploadMultipleFilesContextKey).([]utils.UploadResult)
 	if !ok {
-		return nil, nil, false
+		return nil, nil, nil, false
 	}
 
 	// Extract URLs and filenames into separate slices
 	urls := make([]string, len(uploadResults))
 	filenames := make([]string, len(uploadResults))
+	publicIds := make([]string, len(uploadResults))
 	
 	for i, result := range uploadResults {
 		urls[i] = result.URL
 		filenames[i] = result.FileName
+		publicIds[i] = result.PublicID
 	}
 
-	return urls, filenames, true
+	return urls, filenames, publicIds, true
 }

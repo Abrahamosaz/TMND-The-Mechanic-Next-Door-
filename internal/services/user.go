@@ -1,18 +1,30 @@
 package services
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/google/uuid"
+	"github.com/Abrahamosaz/TMND/internal/utils"
 )
 
 
 
 
-func EditUserProfile(app *Application, userId uuid.UUID, editInfo EditProfileInfo) (int, error) {
+func EditUserProfile(app *Application, user *models.User, editInfo EditProfileInfo) (int, error) {
+
+	if (user.PublicId != nil && user.ProfileImageUrl != nil) {
+		cloudinaryURL := os.Getenv("CLOUDINARY_URL")
+		cld := &utils.Cloudinary{URL: cloudinaryURL}
+
+		folder := fmt.Sprintf("%s/%s", utils.CLOUDINARY_PROFILE_IMAGE_FOLDER, user.ID)
+		publicId := fmt.Sprintf("%s/%s", folder, *user.PublicId)
+		go cld.DeleteFileFromCloudinary(publicId)
+	}
+
 	err := app.Store.User.Update(models.User{
-		ID: userId,
+		ID: user.ID,
 		FullName: editInfo.UserProfile.FullName,
 		PhoneNumber: editInfo.UserProfile.PhoneNumber,
 		Address: editInfo.UserProfile.Address,
@@ -20,6 +32,7 @@ func EditUserProfile(app *Application, userId uuid.UUID, editInfo EditProfileInf
 		Lga: editInfo.UserProfile.Lga,
 		ProfileFileName: &editInfo.FileName,
 		ProfileImageUrl: &editInfo.URL,
+		PublicId: &editInfo.PublicId,
 	})
 
 	if err != nil {

@@ -40,6 +40,7 @@ type Booking struct {
 	VehicleImagesUrl		datatypes.JSON		`gorm:"type:jsonb" json:"vehicleImagesUrl"`
 	VehicleImagesFilename	datatypes.JSON 		`gorm:"type:jsonb" json:"-"`
 	NextExecutionTime		*time.Time			`json:"-"`
+	PublicIds				*string		        `json:"-"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`
 	

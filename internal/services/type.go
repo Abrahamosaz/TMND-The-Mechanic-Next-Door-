@@ -46,6 +46,7 @@ type EditProfileInfo struct {
 	UserProfile 	EditProfile
 	URL 			string
 	FileName 		string
+	PublicId 		string
 }
 
 
@@ -53,4 +54,3 @@ type EditProfileInfo struct {
 type BookingFeeResponse struct {
 	Fee float64 `json:"fee"`
 }
-

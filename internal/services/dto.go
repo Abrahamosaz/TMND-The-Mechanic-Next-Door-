@@ -69,4 +69,5 @@ type CreateBooking struct {
 	VehicleDetails 				VehicleDetails 		`json:"vehicleDetails" validate:"required"`
 	VehicleImagesUrl 			[]string			`json:"vehicleImagesUrl"`
 	VehicleImagesFilename 		[]string 			`json:"vehicleImagesFilename"`
+	PublicIds 					[]string			`json:"publicIds"`
 }

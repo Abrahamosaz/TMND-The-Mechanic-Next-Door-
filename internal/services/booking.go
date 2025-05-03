@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -129,6 +130,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
         }
     }
 
+    joinedPublicIds := strings.Join(payload.PublicIds, ",")
     // found mechanic
     booking := models.Booking{
 		UserID:     user.ID,
@@ -144,6 +146,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
 		Status:         models.BookingPending,
         VehicleImagesUrl: encodedVehicleImagesUrl,
         VehicleImagesFilename: encodedVehicleImagesFilename,
+		PublicIds:  &joinedPublicIds,
 	}
 
     //create booking

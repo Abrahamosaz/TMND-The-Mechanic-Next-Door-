@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -48,23 +49,15 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-
-	filesUrl, filenames, _ := app.GetUploadedFilesFromContext(r)
-
-	// Parse the multipart form data
-    err := r.ParseMultipartForm(10 << 20) // 10 MB max memory
-    if err != nil {
-        app.responseJSON(http.StatusBadRequest, w, "Error parsing form data", nil)
-        return
-    }
+	filesUrl, filenames, publicIds, _ := app.GetUploadedFilesFromContext(r)
 
     // Create booking DTO from form values
     var createBookingDto services.CreateBooking
 
-
-	if filesUrl != nil && filenames != nil {
+	if filesUrl != nil && filenames != nil && publicIds != nil {
 		createBookingDto.VehicleImagesUrl = filesUrl
 		createBookingDto.VehicleImagesFilename = filenames
+		createBookingDto.PublicIds = publicIds
 	}
 
     // Get the form data as JSON string
@@ -73,9 +66,10 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
         app.responseJSON(http.StatusBadRequest, w, "Missing form data", nil)
         return
     }
-
+	
+	fmt.Println("jsonData: ", jsonData)
     // Decode the JSON string into the createBookingDto
-    err = json.Unmarshal([]byte(jsonData), &createBookingDto)
+    err := json.Unmarshal([]byte(jsonData), &createBookingDto)
     if err != nil {
         app.responseJSON(http.StatusBadRequest, w, "Invalid JSON in form data", nil)
         return

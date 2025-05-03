@@ -11,8 +11,6 @@ import (
 	"os"
 
 	"github.com/Abrahamosaz/TMND/internal/utils"
-	"github.com/cloudinary/cloudinary-go/v2"
-	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
 
@@ -24,13 +22,6 @@ const mechanicContextKey contextKey = "mechanic"
 type uploadContext string
 const uploadContextKey uploadContext = "uploadedFileURL"
 const uploadMultipleFilesContextKey uploadContext = "uploadedFilesURL"
-
-
-type UploadResult struct {
-	URL      string
-	FileName string
-}
-
 
 
 func (app *application) userAuthMiddleware(next http.Handler) http.Handler {
@@ -124,38 +115,26 @@ func (app *application) uploadMiddleware(fileKey string, folder string) func(htt
 			}
 			defer file.Close()
 
-			// Initialize Cloudinary
-			cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
-			cld, err := cloudinary.NewFromURL(cloudinaryUrl)
-			if err != nil {
-				log.Printf("Cloudinary setup error: %s", err.Error())
-				app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
-				return
-			}
-
 			// Upload file to Cloudinary
 			ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 			defer cancel()
 
-			uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
-				PublicID: fileHeader.Filename,
-				Folder:   fmt.Sprintf("%s/%s", folder, user.ID),
-				AllowedFormats: CLOUDINARY_ALLOWED_FORMATS,
-				Transformation: CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION,
+			uploadResult, err := handleUploadToCloudinary(&utils.CloudinaryUploadParams{
+				Ctx: ctx,
+				File: file,
+				FileHeader: fileHeader,
+				Folder: folder,
+				User: user,
 			})
 
 			if err != nil {
-				log.Printf("Cloudinary setup error: %s", err.Error())
+				log.Printf("%s", err.Error())
 				app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
 				return
 			}
 
 			// Add uploaded file URL to request context
-			ctx = context.WithValue(r.Context(), uploadContextKey, &UploadResult{
-				URL:      uploadResult.SecureURL,
-				FileName: fileHeader.Filename,
-			})
-
+			ctx = context.WithValue(r.Context(), uploadContextKey, uploadResult)
 			// Call next handler with updated context
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -189,18 +168,8 @@ func (app *application) uploadMultipleFilesMiddleware(fileKey string, folder str
                 return
             }
 
-            // Initialize Cloudinary
-            cloudinaryUrl := os.Getenv("CLOUDINARY_URL")
-            cld, err := cloudinary.NewFromURL(cloudinaryUrl)
-            if err != nil {
-                log.Printf("Cloudinary setup error: %s", err.Error())
-                app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
-                return
-            }
-
             // Create a slice to store all upload results
-            uploadResults := make([]UploadResult, 0, len(files))
-
+            uploadResults := make([]utils.UploadResult, 0, len(files))
             // Create a context with timeout for all uploads
             ctx, cancel := context.WithTimeout(r.Context(), 120 * time.Second)
             defer cancel()
@@ -213,26 +182,24 @@ func (app *application) uploadMultipleFilesMiddleware(fileKey string, folder str
                     log.Printf("File open error: %s", err.Error())
                     continue
                 }
-                defer file.Close()
 
                 // Upload file to Cloudinary
-                uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
-                    PublicID: fileHeader.Filename,
-        			Folder:   fmt.Sprintf("%s/%s", folder, user.ID),
-                    AllowedFormats: CLOUDINARY_ALLOWED_FORMATS,
-                    Transformation: CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION,
-                })
+                uploadResult, err := handleUploadToCloudinary(&utils.CloudinaryUploadParams{
+					Ctx: ctx,
+					File: file,
+					FileHeader: fileHeader,
+					Folder: folder,
+					User: user,
+				})
+				file.Close()
 
                 if err != nil {
-                    log.Printf("Cloudinary upload error for file %s: %s", fileHeader.Filename, err.Error())
+                   	log.Printf("%s", err.Error())
                     continue
                 }
 
                 // Add to results
-                uploadResults = append(uploadResults, UploadResult{
-                    URL:      uploadResult.SecureURL,
-                    FileName: fileHeader.Filename,
-                })
+                uploadResults = append(uploadResults, *uploadResult)
             }
 
 			// jsonBytes, _ := json.MarshalIndent(uploadResults, "", "\t")
@@ -252,6 +219,17 @@ func (app *application) uploadMultipleFilesMiddleware(fileKey string, folder str
         })
     }
 }
+
+
+func handleUploadToCloudinary(params *utils.CloudinaryUploadParams) (*utils.UploadResult, error) {
+    cloudinaryURL := os.Getenv("CLOUDINARY_URL")
+	cld := &utils.Cloudinary{URL: cloudinaryURL}
+
+	// Upload file to Cloudinary using the utility
+	uploadResult, err := cld.UploadFileToCloudinary(params)
+	return uploadResult, err
+}
+
 
 // validateToken parses and verifies the JWT token
 func validateToken(tokenString string) (*utils.MyCustomClaims, error) {
