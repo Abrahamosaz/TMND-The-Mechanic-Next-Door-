@@ -9,6 +9,7 @@ import (
 
 
 type TrasactionStatus string
+type TransactionType string
 
 const (
 	StatusPending 	TrasactionStatus = "pending"
@@ -16,6 +17,12 @@ const (
 	StatusSuccess 	TrasactionStatus = "success"
 )
 
+const (
+	TransactionTypeDebit TransactionType = "debit"
+	TransactionTypeCredit TransactionType = "credit"
+)
+
+type TransactionStatus string
 
 type Transaction struct {
 	ID        		        uuid.UUID   		`gorm:"type:uuid;default:uuid_generate_v4()" json:"id"`
@@ -24,14 +31,18 @@ type Transaction struct {
 	MechanicID				*uuid.UUID			`json:"mechanicId"`
 	PreviousBalance			float64				`json:"previousBalance"`
 	CurrentBalance			float64				`json:"currentBalance"`
+	Type					TransactionType		`gorm:"default:debit" json:"type"`	
 	Status					TrasactionStatus	`gorm:"default:pending" json:"status"`
+	Fee						*float64			`json:"-"`
 	Amount					float64				`json:"amount"`
 	CreatedAt 		        time.Time   		`json:"createdAt"`
     UpdatedAt 		        time.Time   		`json:"updatedAt"`
+	Description				*string				`json:"description"`
+
 
 	//relationships
-	// User        			*User   			`gorm:"foreignKey:UserID" json:"user"`
-	// Mechanic        		*Mechanic   		`gorm:"foreignKey:MechanicID" json:"mechanic"`
+	User        			*User   			`gorm:"foreignKey:UserID" json:"user"`
+	Mechanic        		*Mechanic   		`gorm:"foreignKey:MechanicID" json:"mechanic"`
 }
 
 

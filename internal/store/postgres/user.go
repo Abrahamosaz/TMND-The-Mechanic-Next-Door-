@@ -82,6 +82,17 @@ func (userRepo *UserRepository) Update(user models.User) (error) {
 }
 
 
+
+func (userRepo *UserRepository) TrxUpdate(tx *gorm.DB, user *models.User) (error) {
+	result := tx.Model(&user).Updates(user)
+	// Check for errors
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
 func (userRepo *UserRepository) FindByID(id string) (models.User, error) {
 
 	var user models.User

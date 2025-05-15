@@ -71,3 +71,9 @@ type CreateBooking struct {
 	VehicleImagesFilename 		[]string 			`json:"vehicleImagesFilename"`
 	PublicIds 					[]string			`json:"publicIds"`
 }
+
+type FundAccount struct {
+	Amount 	float64	`json:"amount" validate:"required"`
+	RedirectUrl string	`json:"redirectUrl"`
+	Description string	`json:"description"`
+}

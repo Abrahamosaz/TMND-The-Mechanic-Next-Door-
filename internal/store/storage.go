@@ -15,6 +15,7 @@ type Storage struct {
 		FindByID(string) (models.User, error)
 		Save(*models.User) error
 		Update(models.User) error
+		TrxUpdate(*gorm.DB, *models.User) error
 		DeductFromBalance(*gorm.DB, *models.User, float64) error
 	}
 	Mechanic interface {
@@ -38,6 +39,8 @@ type Storage struct {
 	}
 	Transaction interface {
 		Create(*gorm.DB, *models.Transaction) error
+		Update(*gorm.DB, *models.Transaction) error
+		GetTransactionByTrxRef(string) (*models.Transaction, error)
 		GetUserTransactions(*models.User, *models.PaginationQuery) (*models.PaginationResponse[models.Transaction], error)
 	}
 	Vehicle interface {

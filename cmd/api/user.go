@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/utils"
+	"github.com/go-chi/chi/v5"
 )
 
 
@@ -70,7 +72,7 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 		editProfileInfo.PublicId = *publicId
 	}
 
-	statusCode, err := services.EditUserProfile(&serviceApp, user, editProfileInfo)
+	statusCode, err := serviceApp.EditUserProfile(user, editProfileInfo)
 
 	if err != nil {
 		log.Println("error editing user profile: ", err.Error())
@@ -108,8 +110,7 @@ func (app *application) getUserTransactionHandler(w http.ResponseWriter, r *http
 	}
 
 	serviceApp := app.createNewServiceApp()
-	trxs, statusCode, err := services.GetUserTransaction(
-		&serviceApp,
+	trxs, statusCode, err := serviceApp.GetUserTransaction(
 		user,
 		&models.PaginationQuery{Page: utils.ConvertStrToPtrInt(page), Limit: utils.ConvertStrToPtrInt(limit)},
 	)
@@ -125,4 +126,71 @@ func (app *application) getUserTransactionHandler(w http.ResponseWriter, r *http
 	}
 	app.responseJSON(statusCode, w, "User transactions retrieved successfully", trxs)
 
+}
+
+
+func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Request) {
+
+	var fundAccount services.FundAccount
+
+	err := json.NewDecoder(r.Body).Decode(&fundAccount)
+
+	if err != nil {
+		app.responseJSON(http.StatusBadRequest, w, "Invalid request body", nil)
+		return
+	}
+
+	err = validate.Struct(fundAccount)
+
+	if err != nil {
+		ValidateRequestBody(err, w)
+		return
+	}
+
+	user, ok := app.GetUserFromContext(r)
+
+	if !ok {
+		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		return
+	}
+
+	serviceApp := app.createNewServiceApp()
+
+	result, statusCode, err := serviceApp.CreateInvoice(user, fundAccount)
+
+	if err != nil {
+		log.Println("error creating invoice: ", err.Error())
+		message := err.Error()
+		if statusCode == http.StatusInternalServerError {
+			message = "internal server error"
+		}
+		app.responseJSON(statusCode, w, message, nil)
+		return
+	}
+	app.responseJSON(statusCode, w, "Invoice created successfully", result)
+	
+}
+
+
+func (app *application) confirmPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	paymentReference := chi.URLParam(r, "paymentReference")
+
+	user, ok := app.GetUserFromContext(r)
+
+	if !ok {
+		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		return
+	}
+
+	serviceApp := app.createNewServiceApp()
+
+	statusCode, err := serviceApp.ConfirmUserPayment(user, paymentReference)
+
+	if err != nil {
+		log.Println("error confirming payment: ", err.Error())
+		app.responseJSON(statusCode, w, err.Error(), nil)
+		return
+	}
+
+	app.responseJSON(statusCode, w, "Payment confirmed successfully", nil)
 }

@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-
-var CLOUDINARY_PROFILE_IMAGE_FOLDER = "TMND/profilePictures"
-var CLOUDINARY_VEHICLE_IMAGE_FOLDER = "TMND/vehicleImages"
-
-
 // vehicle constants
 type vehicleConstants struct {
 	Label string 	`json:"label"`

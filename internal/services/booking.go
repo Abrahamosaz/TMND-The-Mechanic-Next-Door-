@@ -17,7 +17,7 @@ import (
 )
 
 
-func CreateUserBooking(app *Application, payload CreateBooking, user *models.User) (models.Booking, int, error) {
+func (app *Application) CreateUserBooking(payload CreateBooking, user *models.User) (models.Booking, int, error) {
     // begin transaction
     tx := app.Store.BeginTransaction()
     bookingFee, err := app.Store.Booking.GetBookingFee()
@@ -49,7 +49,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
     tempMechanicChan := make(chan models.Mechanic)
     errChan := make(chan error)
     // get temporary  assigned mechanic
-    go getMechanicForBooking(app, tempMechanicChan, errChan)
+    go app.getMechanicForBooking(tempMechanicChan, errChan)
 
     // create all services
     var services []*models.Service 
@@ -68,7 +68,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
         return models.Booking{}, http.StatusInternalServerError, err
     }
 
-    err = CreateNewTransaction(app, tx, &models.Transaction{
+    err = app.CreateNewTransaction(tx, &models.Transaction{
         TrxRef: trxRef,
         UserID: &user.ID,
         PreviousBalance: previousBalance,
@@ -164,7 +164,7 @@ func CreateUserBooking(app *Application, payload CreateBooking, user *models.Use
 }
 
 
-func GetBookingFee(app *Application)  (BookingFeeResponse, int, error) {
+func (app *Application) GetBookingFee() (BookingFeeResponse, int, error) {
 	bookingFee, err := app.Store.Booking.GetBookingFee()
 
 	if err != nil {
@@ -175,7 +175,7 @@ func GetBookingFee(app *Application)  (BookingFeeResponse, int, error) {
 }
 
 
-func CancelBooking(app *Application, bookingID string) (int, error) {
+func (app *Application) CancelBooking(bookingID string) (int, error) {
 
     parsedBookingID, err := uuid.Parse(bookingID)
     if err != nil {
@@ -207,7 +207,7 @@ func CancelBooking(app *Application, bookingID string) (int, error) {
 }
 
 
-func GetUserBookings(app *Application, user *models.User, qs *models.FilterQuery) (*models.PaginationResponse[models.Booking], int, error) {
+func (app *Application) GetUserBookings(user *models.User, qs *models.FilterQuery) (*models.PaginationResponse[models.Booking], int, error) {
 
     bookings, err := app.Store.Booking.GetUserBookings(user, qs)
 
@@ -219,7 +219,7 @@ func GetUserBookings(app *Application, user *models.User, qs *models.FilterQuery
 }
 
 
-func GetBookingServices(app *Application) (*[]models.ServiceCategory, int, error) {
+func (app *Application) GetBookingServices() (*[]models.ServiceCategory, int, error) {
 	serviceCategories, err := app.Store.Service.GetServiceCategories()
 	
 	if err != nil {
@@ -229,7 +229,7 @@ func GetBookingServices(app *Application) (*[]models.ServiceCategory, int, error
 }
 
 
-func GetDisabledDatesForUser(app *Application, user *models.User) ([]string, int, error) {
+func (app *Application) GetDisabledDatesForUser(user *models.User) ([]string, int, error) {
 	dates := utils.GetNextNumDays(30)
 
 	fmt.Println("dates", dates)
@@ -237,8 +237,8 @@ func GetDisabledDatesForUser(app *Application, user *models.User) ([]string, int
 	availableChan := make(chan []models.Mechanic)
 	errorChan := make(chan error, 2) 
 
-	go fetchPendingBookings(app, pendingChan, errorChan)
-    go fetchAvailableMechanics(app, availableChan, errorChan)
+	go app.fetchPendingBookings(pendingChan, errorChan)
+    go app.fetchAvailableMechanics(availableChan, errorChan)
 
 	// collect result
 	pendingBookings, availableMechanics, err := collectResults(pendingChan, availableChan, errorChan)
@@ -285,7 +285,7 @@ func GetDisabledDatesForUser(app *Application, user *models.User) ([]string, int
 }
 
 
-func getMechanicForBooking(app *Application, ch chan<- models.Mechanic, errCh chan<- error) {
+func (app *Application) getMechanicForBooking(ch chan<- models.Mechanic, errCh chan<- error) {
     mechanic, err := app.Store.Mechanic.GetAvailableMechanic([]string{}, []string{})
 
     if err != nil {
@@ -301,7 +301,7 @@ func getMechanicForBooking(app *Application, ch chan<- models.Mechanic, errCh ch
 }
 
 
-func fetchPendingBookings(app *Application, ch chan<- []models.Booking, errCh chan<- error) {
+func (app *Application) fetchPendingBookings(ch chan<- []models.Booking, errCh chan<- error) {
     bookings, err := app.Store.Booking.GetPendingBookings()
     if err != nil {
         errCh <- err
@@ -310,7 +310,7 @@ func fetchPendingBookings(app *Application, ch chan<- []models.Booking, errCh ch
     ch <- *bookings
 }
 
-func fetchAvailableMechanics(app *Application, ch chan<- []models.Mechanic, errCh chan<- error) {
+func (app *Application) fetchAvailableMechanics(ch chan<- []models.Mechanic, errCh chan<- error) {
     mechanics, err := app.Store.Mechanic.GetAllAvailableMechanics()
     if err != nil {
         errCh <- err

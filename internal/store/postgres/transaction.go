@@ -20,11 +20,28 @@ func (trxRepo *TransactionRepository) Create(tx *gorm.DB,  trx *models.Transacti
 }
 
 
+func (trxRepo *TransactionRepository) Update(tx *gorm.DB, trx *models.Transaction) (error) {
+	if err := tx.Model(&models.Transaction{}).Where("id = ?", trx.ID).Updates(trx).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+
+func (trxRepo *TransactionRepository) GetTransactionByTrxRef(trxRef string) (*models.Transaction, error) {
+	var trx models.Transaction
+	if err := trxRepo.DB.Where("trx_ref = ?", trxRef).First(&trx).Error; err != nil {
+		return nil, err
+	}
+	return &trx, nil
+}
+
+
 func (trxRepo *TransactionRepository) GetUserTransactions(user *models.User, pgQuery *models.PaginationQuery) (*models.PaginationResponse[models.Transaction], error) {
 	var transactions []models.Transaction
 	var total int64
 
-	query := trxRepo.DB.Model(&models.Transaction{}).Where("user_id = ?", user.ID)
+	query := trxRepo.DB.Model(&models.Transaction{}).Where("user_id = ?", user.ID).Order("created_at DESC")
 	
 	// Count total records
 	if err := query.Count(&total).Error; err != nil {

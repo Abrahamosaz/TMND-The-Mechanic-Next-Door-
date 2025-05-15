@@ -80,10 +80,18 @@ func (app *application) mount() http.Handler {
 		})
 
 
+
+		rootRouter.Route("/webhooks", func(webhookRouter chi.Router) {
+			webhookRouter.Post("/monnify", app.handleMonnifyWebhook)
+		})
+
+		
 		//user routes
 		rootRouter.Route("/user", func(userRouter chi.Router) {
 			userRouter.Use(app.userAuthMiddleware)
 			userRouter.Get("/get-user", app.getUserHandler)
+			userRouter.Post("/create-invoice", app.createInvoiceHandler)
+			userRouter.Post("/confirm-payment/{paymentReference}", app.confirmPaymentHandler)
 			userRouter.With(app.uploadMiddleware("profile-image", utils.CLOUDINARY_PROFILE_IMAGE_FOLDER)).Put("/edit-profile", app.editUserProfileHandler)
 			
 			// booking routes

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -25,7 +24,7 @@ func (app *application) getDisabledDateHanlder(w http.ResponseWriter, r *http.Re
 
 	serviceApp := app.createNewServiceApp()
 
-	disabledDates, statusCode, err := services.GetDisabledDatesForUser(&serviceApp, user)
+	disabledDates, statusCode, err := serviceApp.GetDisabledDatesForUser(user)
 
 	if err != nil {
 		log.Println("error getting disabled dates: ", err.Error())
@@ -67,7 +66,7 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
         return
     }
 	
-	fmt.Println("jsonData: ", jsonData)
+	// fmt.Println("jsonData: ", jsonData)
     // Decode the JSON string into the createBookingDto
     err := json.Unmarshal([]byte(jsonData), &createBookingDto)
     if err != nil {
@@ -82,7 +81,7 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
     }
 
 	serviceApp := app.createNewServiceApp()
-	newBooking, statusCode, err := services.CreateUserBooking(&serviceApp, createBookingDto, user)
+	newBooking, statusCode, err := serviceApp.CreateUserBooking(createBookingDto, user)
 
 	if err != nil {
 		log.Println("error creating new booking: ", err.Error())
@@ -100,7 +99,7 @@ func (app *application) createBookingHandler(w http.ResponseWriter, r *http.Requ
 
 func (app *application) getBookingFeeHandler(w http.ResponseWriter, r *http.Request) {
 	serviceApp := app.createNewServiceApp()
-	fee, statusCode, err := services.GetBookingFee(&serviceApp)
+	fee, statusCode, err := serviceApp.GetBookingFee()
 
 	if err != nil {
 		log.Println("error getting booking fee: ", err.Error())
@@ -120,7 +119,7 @@ func (app *application) getBookingFeeHandler(w http.ResponseWriter, r *http.Requ
 func (app *application) cancelBookingHandler(w http.ResponseWriter, r *http.Request) {
 	bookingID := chi.URLParam(r, "id")
 	serviceApp := app.createNewServiceApp()
-	statusCode, err := services.CancelBooking(&serviceApp, bookingID)
+	statusCode, err := serviceApp.CancelBooking(bookingID)
 
 	if err != nil {
 		log.Println("error canceling booking: ", err.Error())
@@ -161,7 +160,7 @@ func (app *application) getBookingsHandler(w http.ResponseWriter, r *http.Reques
 	status := qs.Get("status")
 
 	serviceApp := app.createNewServiceApp()
-	bookings, statusCode, err := services.GetUserBookings(&serviceApp,
+	bookings, statusCode, err := serviceApp.GetUserBookings(
 		user, 
 		&models.FilterQuery{
 			Search: &search,
@@ -208,7 +207,7 @@ func (app *application) getVehicleDetailsHandlder(w http.ResponseWriter, r *http
 func (app *application) getServicesHandler(w http.ResponseWriter, r *http.Request) {
 
 	serviceApp := app.createNewServiceApp()
-	fee, statusCode, err := services.GetBookingServices(&serviceApp)
+	fee, statusCode, err := serviceApp.GetBookingServices()
 
 		if err != nil {
 		log.Println("error getting booking services: ", err.Error())
