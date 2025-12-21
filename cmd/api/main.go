@@ -5,49 +5,63 @@ import (
 	"log"
 	"os"
 
-	"strconv"
-
 	"github.com/Abrahamosaz/TMND/internal/db"
 	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/Abrahamosaz/TMND/internal/store"
-
-	// "github.com/joho/godotenv"
-	gomail "gopkg.in/mail.v2"
+	"github.com/joho/godotenv"
+	"github.com/resend/resend-go/v3"
 )
 
-
 func main() {
-	// for  development purpose
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
-	
-	port := os.Getenv("PORT")
-
-	cfg := config{
-			addr: fmt.Sprintf(":%v", port),
-			smtp: smtpConfig{
-				user: os.Getenv("SMTP_USER"),
-				from: os.Getenv("SMTP_FROM"),
-				password: os.Getenv("SMTP_PASS"),
-				host: os.Getenv("SMTP_HOST"),
-				port: os.Getenv("SMTP_PORT"),
-			},
-		}
-
-	dbConfig := db.DBConfig{
-		Host: os.Getenv("DB_HOST"),
-		User: os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		DBName: os.Getenv("DB_NAME"),
-		Port: os.Getenv("DB_PORT"),
-		SSLMode: os.Getenv("DB_MODE"),
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Println("PORT not set, using default: 8080")
+	}
+
+	cfg := config{
+		addr: fmt.Sprintf(":%v", port),
+		resend: resendConfig{
+			apiKey: os.Getenv("RESEND_API_KEY"),
+			from:   os.Getenv("RESEND_FROM_EMAIL"),
+		},
+	}
+
+	dbConfig := db.DBConfig{
+		Host:     os.Getenv("DB_HOST"),
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+		Port:     os.Getenv("DB_PORT"),
+		SSLMode:  os.Getenv("DB_MODE"),
+	}
+
+	// Validate required database configuration
+	if dbConfig.Host == "" || dbConfig.User == "" || dbConfig.DBName == "" {
+		log.Fatal("Missing required database configuration. Please set DB_HOST, DB_USER, and DB_NAME environment variables")
+	}
+
+	if dbConfig.Port == "" {
+		dbConfig.Port = "5432" // Default PostgreSQL port
+		log.Println("DB_PORT not set, using default: 5432")
+	}
+
+	if dbConfig.SSLMode == "" {
+		dbConfig.SSLMode = "require" // Default to require for cloud databases
+		log.Println("DB_MODE not set, using default: require")
+	}
+
+	log.Printf("Connecting to database: host=%s port=%s dbname=%s user=%s", dbConfig.Host, dbConfig.Port, dbConfig.DBName, dbConfig.User)
+
 	dbCon, err := db.ConnectDB(dbConfig)
-	
+
 	if err != nil {
 		log.Fatal("Failed to connect to database ", err)
 	}
@@ -70,31 +84,29 @@ func main() {
 	//sendDB
 	seedDB(dbCon)
 
-
 	if err != nil {
 		log.Fatal("Failed migrating database models")
 	}
-	
+
 	log.Printf("Connected to database successfully")
 
 	pgStore := store.PostgresStorage(dbCon)
 
-	smtpPort, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
-
-	if err != nil {
-		log.Fatal("Invalid SMTP_PORT:", err)
+	// Initialize Resend client
+	if cfg.resend.apiKey == "" {
+		log.Println("Warning: RESEND_API_KEY not set. Email functionality will not work.")
 	}
-	
-	dialer := gomail.NewDialer(
-		cfg.smtp.host, smtpPort,
-		cfg.smtp.user, cfg.smtp.password,
-	)
+	if cfg.resend.from == "" {
+		log.Println("Warning: RESEND_FROM_EMAIL not set. Email functionality will not work.")
+	}
+
+	resendClient := resend.NewClient(cfg.resend.apiKey)
 
 	app := &application{
-		config: cfg,
-		store: pgStore,
+		config:   cfg,
+		store:    pgStore,
 		dbConfig: dbConfig,
-		smtp: dialer,
+		resend:   resendClient,
 	}
 
 	//Run cronJob

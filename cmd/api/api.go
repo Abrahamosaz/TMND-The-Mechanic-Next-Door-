@@ -13,61 +13,53 @@ import (
 	"github.com/Abrahamosaz/TMND/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	gomail "gopkg.in/mail.v2"
+	"github.com/resend/resend-go/v3"
 )
 
-
 type application struct {
-	config  	config
-	store  		store.Storage
-	dbConfig 	db.DBConfig
-	smtp    	*gomail.Dialer
+	config   config
+	store    store.Storage
+	dbConfig db.DBConfig
+	resend   *resend.Client
 }
 
 type config struct {
-	addr string
-	smtp smtpConfig
+	addr   string
+	resend resendConfig
 }
 
-
-type smtpConfig struct {
-	user 		string
-	from 		string
-	password 	string
-	host 		string
-	port 		string
+type resendConfig struct {
+	apiKey string
+	from   string
 }
-
 
 type Response struct {
-	Message 	string 			`json:"message"`
-	StatusCode 	int 			`json:"statusCode"`
-	Data  		any				`json:"data"`
+	Message    string `json:"message"`
+	StatusCode int    `json:"statusCode"`
+	Data       any    `json:"data"`
 }
-
 
 func (app *application) mount() http.Handler {
 
 	router := chi.NewRouter()
 
-  // A good base middleware stack
+	// A good base middleware stack
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
-	
+
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	router.Use(middleware.Timeout(60 * time.Second))
-
 
 	// health check
 	router.Route("/api/v1", func(rootRouter chi.Router) {
 		rootRouter.Get("/health", app.healthCheckHandler)
 		// rootRouter.Get("/send-email", app.testSendMail)
 
-		rootRouter.Route("/auth", func(authRouter chi.Router) {	
+		rootRouter.Route("/auth", func(authRouter chi.Router) {
 			authRouter.Post("/signup", app.userSignupHandler)
 			authRouter.Post("/login", app.userLoginHandler)
 			authRouter.Post("/forgot-password", app.forgotPasswordHandler)
@@ -79,13 +71,10 @@ func (app *application) mount() http.Handler {
 			authRouter.Post("/mechanic/login", app.mechanicLoginHandler)
 		})
 
-
-
 		rootRouter.Route("/webhooks", func(webhookRouter chi.Router) {
 			webhookRouter.Post("/monnify", app.handleMonnifyWebhook)
 		})
 
-		
 		//user routes
 		rootRouter.Route("/user", func(userRouter chi.Router) {
 			userRouter.Use(app.userAuthMiddleware)
@@ -93,7 +82,7 @@ func (app *application) mount() http.Handler {
 			userRouter.Post("/create-invoice", app.createInvoiceHandler)
 			userRouter.Post("/confirm-payment/{paymentReference}", app.confirmPaymentHandler)
 			userRouter.With(app.uploadMiddleware("profile-image", utils.CLOUDINARY_PROFILE_IMAGE_FOLDER)).Put("/edit-profile", app.editUserProfileHandler)
-			
+
 			// booking routes
 			userRouter.Route("/booking", func(bookingRouter chi.Router) {
 				bookingRouter.Get("/get-bookings", app.getBookingsHandler)
@@ -116,7 +105,6 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
-
 		//mechanic routes
 		rootRouter.Route("/mechanic", func(mechanicRouter chi.Router) {
 			mechanicRouter.Use(app.mechanicAuthMiddleware)
@@ -127,7 +115,6 @@ func (app *application) mount() http.Handler {
 				bookingRouter.Post("/accept", app.acceptBookingHandler)
 			})
 
-
 			//transaction routes
 			mechanicRouter.Route("/transaction", func(trxRouter chi.Router) {
 				// trxRouter.Get()
@@ -135,44 +122,39 @@ func (app *application) mount() http.Handler {
 
 		})
 	})
-	
+
 	return router
 }
 
-
-func (app *application) run(mux http.Handler) (error) {
+func (app *application) run(mux http.Handler) error {
 
 	srv := &http.Server{
-		Addr: app.config.addr,
-		Handler: mux,
+		Addr:         app.config.addr,
+		Handler:      mux,
 		WriteTimeout: time.Second * 30,
-		ReadTimeout: time.Second * 10,
-		IdleTimeout: time.Minute,
+		ReadTimeout:  time.Second * 10,
+		IdleTimeout:  time.Minute,
 	}
 
 	log.Printf("Server running on %s", app.config.addr)
 	return srv.ListenAndServe()
 }
 
+func (app *application) createNewServiceApp() services.Application {
 
-func (app *application) createNewServiceApp()  services.Application {
-	
 	config := services.Config{
 		Addr: app.config.addr,
-		Smtp: services.SmtpConfig{
-			User: app.config.smtp.user,
-			From: app.config.smtp.from,
-			Password: app.config.smtp.password,
-			Host: app.config.smtp.host,
-			Port: app.config.smtp.port,
+		Resend: services.ResendConfig{
+			ApiKey: app.config.resend.apiKey,
+			From:   app.config.resend.from,
 		},
 	}
 
 	return services.Application{
-		Config: config,
-		Store: app.store,
+		Config:   config,
+		Store:    app.store,
 		DbConfig: app.dbConfig,
-		Smtp: app.smtp,
+		Resend:   app.resend,
 	}
 }
 
@@ -183,12 +165,11 @@ func (app *application) responseJSON(statusCode int, w http.ResponseWriter, mess
 		data = []string{}
 	}
 	json.NewEncoder(w).Encode(Response{
-		Message: message,
+		Message:    message,
 		StatusCode: statusCode,
-		Data: data,
+		Data:       data,
 	})
 }
-
 
 func (app *application) GetUserFromContext(r *http.Request) (*models.User, bool) {
 	user, ok := r.Context().Value(userContextKey).(*models.User)
@@ -203,7 +184,6 @@ func (app *application) GetFileInfoFromContext(r *http.Request) (*string, *strin
 	return &fileInfo.URL, &fileInfo.FileName, &fileInfo.PublicID, true
 }
 
-
 func (app *application) GetUploadedFilesFromContext(r *http.Request) ([]string, []string, []string, bool) {
 	// Get the upload results from context
 	uploadResults, ok := r.Context().Value(uploadMultipleFilesContextKey).([]utils.UploadResult)
@@ -215,7 +195,7 @@ func (app *application) GetUploadedFilesFromContext(r *http.Request) ([]string, 
 	urls := make([]string, len(uploadResults))
 	filenames := make([]string, len(uploadResults))
 	publicIds := make([]string, len(uploadResults))
-	
+
 	for i, result := range uploadResults {
 		urls[i] = result.URL
 		filenames[i] = result.FileName

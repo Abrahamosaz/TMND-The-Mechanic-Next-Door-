@@ -9,7 +9,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-
 var validate = validator.New(validator.WithRequiredStructEnabled())
 
 func (app *application) userSignupHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +35,7 @@ func (app *application) userSignupHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Println("error creating new user: ", err.Error())
 		message := err.Error()
-		if (statusCode == http.StatusInternalServerError) {
+		if statusCode == http.StatusInternalServerError {
 			message = "internal server error"
 		}
 		app.responseJSON(statusCode, w, message, nil)
@@ -71,7 +70,7 @@ func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		log.Println("error login: ", err.Error())
 		message := err.Error()
-		if (statusCode == http.StatusInternalServerError) {
+		if statusCode == http.StatusInternalServerError {
 			message = "internal server error"
 		}
 		app.responseJSON(statusCode, w, message, nil)
@@ -105,7 +104,7 @@ func (app *application) mechanicLoginHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Println("error login: ", err.Error())
 		message := err.Error()
-		if (statusCode == http.StatusInternalServerError) {
+		if statusCode == http.StatusInternalServerError {
 			message = "internal server error"
 		}
 		app.responseJSON(statusCode, w, message, nil)
@@ -114,7 +113,6 @@ func (app *application) mechanicLoginHandler(w http.ResponseWriter, r *http.Requ
 
 	app.responseJSON(statusCode, w, "Mechanic login successfully", nil)
 }
-
 
 func (app *application) forgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -140,7 +138,7 @@ func (app *application) forgotPasswordHandler(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		log.Println("error login: ", err.Error())
 		message := err.Error()
-		if (statusCode == http.StatusInternalServerError) {
+		if statusCode == http.StatusInternalServerError {
 			message = "internal server error"
 		}
 		app.responseJSON(statusCode, w, message, nil)
@@ -171,7 +169,7 @@ func (app *application) changePasswordHandlder(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		log.Println("error change password: ", err.Error())
 		message := err.Error()
-		if (statusCode == http.StatusInternalServerError) {
+		if statusCode == http.StatusInternalServerError {
 			message = "internal server error"
 		}
 		app.responseJSON(statusCode, w, message, nil)
@@ -214,7 +212,6 @@ func (app *application) verifyEmailHandler(w http.ResponseWriter, r *http.Reques
 	app.responseJSON(statusCode, w, "User email verified successfully", response)
 }
 
-
 func (app *application) verifyOtpHandler(w http.ResponseWriter, r *http.Request) {
 	var verifyOtp services.VerifyOtp
 	err := json.NewDecoder(r.Body).Decode(&verifyOtp)
@@ -246,7 +243,6 @@ func (app *application) verifyOtpHandler(w http.ResponseWriter, r *http.Request)
 
 }
 
-
 func (app *application) resendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	var resendOtpDto services.Email
 
@@ -270,7 +266,7 @@ func (app *application) resendOtpHandler(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		log.Println("error resend otp: ", err.Error())
 		message := err.Error()
-		if (statusCode == http.StatusInternalServerError) {
+		if statusCode == http.StatusInternalServerError {
 			message = "internal server error"
 		}
 		app.responseJSON(statusCode, w, message, nil)

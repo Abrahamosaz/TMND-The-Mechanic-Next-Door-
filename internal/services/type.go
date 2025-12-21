@@ -4,7 +4,7 @@ import (
 	"github.com/Abrahamosaz/TMND/internal/db"
 	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/Abrahamosaz/TMND/internal/store"
-	gomail "gopkg.in/mail.v2"
+	"github.com/resend/resend-go/v3"
 )
 
 
@@ -12,22 +12,19 @@ type Application struct {
 	Config  	Config
 	Store  		store.Storage
 	DbConfig 	db.DBConfig
-	Smtp     	*gomail.Dialer
+	Resend     	*resend.Client
 }
 
 
 type Config struct {
-	Addr string
-	Smtp SmtpConfig
+	Addr   string
+	Resend ResendConfig
 }
 
 
-type SmtpConfig struct {
-	User 		string
-	From 		string
-	Password 	string
-	Host 		string
-	Port 		string
+type ResendConfig struct {
+	ApiKey string
+	From   string
 }
 
 

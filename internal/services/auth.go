@@ -17,35 +17,35 @@ import (
 func CreateUser(app *Application, payload Signup) (models.User, int, error) {
 	// Start a transaction manually
 	tx := app.Store.BeginTransaction()
-	
+
 	user, err := app.Store.User.Create(tx, models.User{
-		FullName: payload.FullName,
-		Email: payload.Email,
-		PhoneNumber: payload.PhoneNumber,
-		Password: payload.Password,
+		FullName:           payload.FullName,
+		Email:              payload.Email,
+		PhoneNumber:        payload.PhoneNumber,
+		Password:           payload.Password,
 		RegisterWithGoogle: payload.RegisterWithGoogle,
 	})
 
 	if err != nil {
 		tx.Rollback()
 		statusCode := http.StatusInternalServerError
-		if (err.Error() == "user with email already exists") {
+		if err.Error() == "user with email already exists" {
 			statusCode = http.StatusNotFound
 		}
 		return models.User{}, statusCode, err
 	}
-	
+
 	// generate otpCode
 	otpCode, err := utils.GenerateOtpCode(4)
 
-	if err != nil  {
+	if err != nil {
 		tx.Rollback()
 		return models.User{}, http.StatusInternalServerError, errors.New("failed to generate otp code")
 	}
 
 	//genarate jwt token
 	expireTime := 15 * time.Minute
-	token, err :=  utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
+	token, err := utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
 		OtpCode: &otpCode,
 	})
 
@@ -59,7 +59,7 @@ func CreateUser(app *Application, payload Signup) (models.User, int, error) {
 	go func() {
 		if err := app.sendOtpEmail("Welcome! Please Verify Your Email to Get Started", user.Email, OtpEmailPayload{
 			fullName: user.FullName,
-			otpCode: otpCode,
+			otpCode:  otpCode,
 		}, "signup"); err != nil {
 			log.Println("Error sending email:", err)
 			panic(err)
@@ -82,8 +82,6 @@ func CreateUser(app *Application, payload Signup) (models.User, int, error) {
 	return user, http.StatusOK, nil
 }
 
-
-
 // login user
 func LoginUser(app *Application, payload Login) (int, error) {
 	email := payload.Email
@@ -95,9 +93,8 @@ func LoginUser(app *Application, payload Login) (int, error) {
 		if err.Error() == "user with email not found" {
 			statusCode = http.StatusNotFound
 		}
-		return statusCode,  err
+		return statusCode, err
 	}
-
 
 	// check if the user registered with google auth
 	if user.RegisterWithGoogle {
@@ -109,19 +106,18 @@ func LoginUser(app *Application, payload Login) (int, error) {
 		return http.StatusBadRequest, errors.New("incorrect email or password")
 	}
 
-		// generate otpCode
+	// generate otpCode
 	otpCode, err := utils.GenerateOtpCode(4)
 
-	if err != nil  {
+	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to generate otp code")
 	}
 
 	//genarate jwt token
 	expireTime := 15 * time.Minute
-	token, err :=  utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
+	token, err := utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
 		OtpCode: &otpCode,
 	})
-	
 
 	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to generate jwt token")
@@ -130,7 +126,7 @@ func LoginUser(app *Application, payload Login) (int, error) {
 	sendEmail := func(subject string) {
 		if err := app.sendOtpEmail(subject, user.Email, OtpEmailPayload{
 			fullName: user.FullName,
-			otpCode: otpCode,
+			otpCode:  otpCode,
 		}, "login"); err != nil {
 			log.Println("Error sending email:", err)
 			panic(err)
@@ -145,7 +141,7 @@ func LoginUser(app *Application, payload Login) (int, error) {
 	if !user.IsEmailVerified {
 		go sendEmail("Your Account is Almost Ready! Verify Your Email Now.")
 	} else {
-		go sendEmail("Your One-Time Password (OTP) for Login")	
+		go sendEmail("Your One-Time Password (OTP) for Login")
 	}
 
 	err = app.Store.User.Save(&user)
@@ -157,7 +153,7 @@ func LoginUser(app *Application, payload Login) (int, error) {
 	return http.StatusOK, nil
 }
 
-func SendUserOtpCode(app  *Application, payload Email, route string) (int, error) {
+func SendUserOtpCode(app *Application, payload Email, route string) (int, error) {
 	email := payload.Email
 	user, err := app.Store.User.FindByEmail(email)
 
@@ -172,16 +168,15 @@ func SendUserOtpCode(app  *Application, payload Email, route string) (int, error
 	// generate otpCode
 	otpCode, err := utils.GenerateOtpCode(4)
 
-	if err != nil  {
+	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to generate otp code")
 	}
 
 	//genarate jwt token
 	expireTime := 15 * time.Minute
-	token, err :=  utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
+	token, err := utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
 		OtpCode: &otpCode,
 	})
-	
 
 	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to generate jwt token")
@@ -192,7 +187,7 @@ func SendUserOtpCode(app  *Application, payload Email, route string) (int, error
 	sendEmail := func(subject string) {
 		if err := app.sendOtpEmail(subject, user.Email, OtpEmailPayload{
 			fullName: user.FullName,
-			otpCode: otpCode,
+			otpCode:  otpCode,
 		}, "forgotPassword"); err != nil {
 			log.Println("Error sending email:", err)
 			panic(err)
@@ -216,10 +211,9 @@ func SendUserOtpCode(app  *Application, payload Email, route string) (int, error
 	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to save user")
 	}
-	return http.StatusOK,  nil
+	return http.StatusOK, nil
 
 }
-
 
 func ResetUserPassword(app *Application, payload ChangePassword) (int, error) {
 	email := payload.Email
@@ -239,14 +233,14 @@ func ResetUserPassword(app *Application, payload ChangePassword) (int, error) {
 	token := user.OtpToken
 
 	if token == nil {
-		return  http.StatusNotAcceptable, errors.New("please request otpcode")
+		return http.StatusNotAcceptable, errors.New("please request otpcode")
 	}
 
 	//decode otp token
 	claims, err := utils.DecodeJWT(*token)
 
 	if err != nil {
-		return  http.StatusBadRequest, errors.New("invalid otp code")
+		return http.StatusBadRequest, errors.New("invalid otp code")
 	}
 
 	if otpCode != *claims.OtpCode {
@@ -273,7 +267,6 @@ func ResetUserPassword(app *Application, payload ChangePassword) (int, error) {
 	return http.StatusOK, nil
 }
 
-
 func VerifyUserEmail(app *Application, payload VerifyOtp) (VerifyUserOtpResponse, int, error) {
 	email := payload.Email
 	otpCode := payload.OtpCode
@@ -291,7 +284,7 @@ func VerifyUserEmail(app *Application, payload VerifyOtp) (VerifyUserOtpResponse
 	token := user.OtpToken
 
 	if token == nil {
-		return  VerifyUserOtpResponse{}, http.StatusNotAcceptable, errors.New("please login and request another otpcode")
+		return VerifyUserOtpResponse{}, http.StatusNotAcceptable, errors.New("please login and request another otpcode")
 	}
 
 	//decode otp token
@@ -306,7 +299,7 @@ func VerifyUserEmail(app *Application, payload VerifyOtp) (VerifyUserOtpResponse
 	}
 
 	type TokenPayload struct {
-		token *string
+		token        *string
 		errorMessage error
 	}
 
@@ -316,18 +309,18 @@ func VerifyUserEmail(app *Application, payload VerifyOtp) (VerifyUserOtpResponse
 		// generate otpCode
 		otpCode, err := utils.GenerateOtpCode(4)
 
-		if err != nil  {
+		if err != nil {
 			tokenChannel <- TokenPayload{nil, errors.New("failed to generate otp code")}
 			return
 		}
 
 		//genarate jwt token
 		expireTime := 30 * 24 * time.Hour
-		token, err :=  utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
+		token, err := utils.GenerateJWT(user.ID.String(), expireTime, utils.PayloadClaims{
 			OtpCode: &otpCode,
-			Role: "USER",
+			Role:    "USER",
 		})
-		
+
 		if err != nil {
 			tokenChannel <- TokenPayload{nil, errors.New("failed to generate jwt token")}
 			return
@@ -350,10 +343,9 @@ func VerifyUserEmail(app *Application, payload VerifyOtp) (VerifyUserOtpResponse
 	if tokenResponse.errorMessage != nil {
 		return VerifyUserOtpResponse{}, http.StatusInternalServerError, tokenResponse.errorMessage
 	}
-	
+
 	return VerifyUserOtpResponse{User: user, Token: *tokenResponse.token}, http.StatusOK, nil
 }
-
 
 func VerifyUserOtpCode(app *Application, payload VerifyOtp) (int, error) {
 	email := payload.Email
@@ -385,16 +377,13 @@ func VerifyUserOtpCode(app *Application, payload VerifyOtp) (int, error) {
 	if otpCode != *claims.OtpCode {
 		return http.StatusBadRequest, errors.New("invalid otp code")
 	}
-	
+
 	return http.StatusOK, nil
 }
-
 
 func GoolgeAuth(app *Application) error {
 	return nil
 }
-
-
 
 // -------- MECHANIC SECTION ----------
 // login mechanic
@@ -408,7 +397,7 @@ func LoginMechanic(app *Application, payload Login) (int, error) {
 		if err.Error() == "mechanic with email not found" {
 			statusCode = http.StatusNotFound
 		}
-		return statusCode,  err
+		return statusCode, err
 	}
 
 	//check if the password is correct
@@ -419,16 +408,15 @@ func LoginMechanic(app *Application, payload Login) (int, error) {
 	// generate otpCode
 	otpCode, err := utils.GenerateOtpCode(4)
 
-	if err != nil  {
+	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to generate otp code")
 	}
 
 	//genarate jwt token
 	expireTime := 15 * time.Minute
-	token, err :=  utils.GenerateJWT(mechanic.ID.String(), expireTime, utils.PayloadClaims{
+	token, err := utils.GenerateJWT(mechanic.ID.String(), expireTime, utils.PayloadClaims{
 		OtpCode: &otpCode,
 	})
-	
 
 	if err != nil {
 		return http.StatusInternalServerError, errors.New("failed to generate jwt token")
@@ -437,7 +425,7 @@ func LoginMechanic(app *Application, payload Login) (int, error) {
 	sendEmail := func(subject string) {
 		if err := app.sendOtpEmail(subject, mechanic.Email, OtpEmailPayload{
 			fullName: mechanic.FullName,
-			otpCode: otpCode,
+			otpCode:  otpCode,
 		}, "login"); err != nil {
 			log.Println("Error sending email:", err)
 			panic(err)
@@ -452,7 +440,7 @@ func LoginMechanic(app *Application, payload Login) (int, error) {
 	if !mechanic.IsEmailVerified {
 		go sendEmail("Your Account is Almost Ready! Verify Your Email Now.")
 	} else {
-		go sendEmail("Your One-Time Password (OTP) for Login")	
+		go sendEmail("Your One-Time Password (OTP) for Login")
 	}
 
 	err = app.Store.Mechanic.Save(&mechanic)
@@ -482,7 +470,7 @@ func VerifyMechanicEmail(app *Application, payload VerifyOtp) (VerifyMechanicOtp
 	token := mechanic.OtpToken
 
 	if token == nil {
-		return  VerifyMechanicOtpResponse{}, http.StatusNotAcceptable, errors.New("please login and request another otpcode")
+		return VerifyMechanicOtpResponse{}, http.StatusNotAcceptable, errors.New("please login and request another otpcode")
 	}
 
 	//decode otp token
@@ -497,7 +485,7 @@ func VerifyMechanicEmail(app *Application, payload VerifyOtp) (VerifyMechanicOtp
 	}
 
 	type TokenPayload struct {
-		token *string
+		token        *string
 		errorMessage error
 	}
 
@@ -507,18 +495,18 @@ func VerifyMechanicEmail(app *Application, payload VerifyOtp) (VerifyMechanicOtp
 		// generate otpCode
 		otpCode, err := utils.GenerateOtpCode(4)
 
-		if err != nil  {
+		if err != nil {
 			tokenChannel <- TokenPayload{nil, errors.New("failed to generate otp code")}
 			return
 		}
 
 		//genarate jwt token
 		expireTime := 30 * 24 * time.Hour
-		token, err :=  utils.GenerateJWT(mechanic.ID.String(), expireTime, utils.PayloadClaims{
+		token, err := utils.GenerateJWT(mechanic.ID.String(), expireTime, utils.PayloadClaims{
 			OtpCode: &otpCode,
-			Role: "MECHANIC",
+			Role:    "MECHANIC",
 		})
-		
+
 		if err != nil {
 			tokenChannel <- TokenPayload{nil, errors.New("failed to generate jwt token")}
 			return
@@ -541,7 +529,6 @@ func VerifyMechanicEmail(app *Application, payload VerifyOtp) (VerifyMechanicOtp
 	if tokenResponse.errorMessage != nil {
 		return VerifyMechanicOtpResponse{}, http.StatusInternalServerError, tokenResponse.errorMessage
 	}
-	
+
 	return VerifyMechanicOtpResponse{Mechanic: mechanic, Token: *tokenResponse.token}, http.StatusOK, nil
 }
-
