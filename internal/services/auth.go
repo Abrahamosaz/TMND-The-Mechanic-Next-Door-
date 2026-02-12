@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/Abrahamosaz/TMND/internal/utils"
+	"github.com/thexovc/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/utils"
 )
 
 // ----- USER SECTION ---------

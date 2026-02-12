@@ -3,20 +3,17 @@ package postgres
 import (
 	"errors"
 
-	"github.com/Abrahamosaz/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-
-
 type UserRepository struct {
 	DB *gorm.DB
 }
 
-
-func (userRepo *UserRepository) Create(tx *gorm.DB, user models.User) (models.User, error) {	
+func (userRepo *UserRepository) Create(tx *gorm.DB, user models.User) (models.User, error) {
 	// Ensure the transaction is rolled back if there’s an error
 	if tx.Error != nil {
 		return models.User{}, tx.Error
@@ -27,7 +24,7 @@ func (userRepo *UserRepository) Create(tx *gorm.DB, user models.User) (models.Us
 
 	if result.Error != nil {
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return models.User{},  result.Error
+			return models.User{}, result.Error
 		}
 	} else if result.RowsAffected > 0 {
 		return models.User{}, errors.New("user with email already exists")
@@ -43,16 +40,15 @@ func (userRepo *UserRepository) Create(tx *gorm.DB, user models.User) (models.Us
 
 	// Create new user
 	if err := tx.Create(&user).Error; err != nil {
-		return models.User{},  err
+		return models.User{}, err
 	}
 
 	return user, nil
 }
 
-
 func (userRepo *UserRepository) FindByEmail(email string) (models.User, error) {
 	var user models.User
-	result := userRepo.DB.Where("email = ?", email).First(&user) 
+	result := userRepo.DB.Where("email = ?", email).First(&user)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -63,7 +59,7 @@ func (userRepo *UserRepository) FindByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
-func (userRepo *UserRepository) Save(user *models.User) (error) {
+func (userRepo *UserRepository) Save(user *models.User) error {
 	result := userRepo.DB.Save(&user)
 	if result.Error != nil {
 		return result.Error // Return the error if save failed
@@ -71,7 +67,7 @@ func (userRepo *UserRepository) Save(user *models.User) (error) {
 	return nil
 }
 
-func (userRepo *UserRepository) Update(user models.User) (error) {
+func (userRepo *UserRepository) Update(user models.User) error {
 	result := userRepo.DB.Model(&user).Updates(user)
 	// Check for errors
 	if result.Error != nil {
@@ -81,9 +77,7 @@ func (userRepo *UserRepository) Update(user models.User) (error) {
 	return nil
 }
 
-
-
-func (userRepo *UserRepository) TrxUpdate(tx *gorm.DB, user *models.User) (error) {
+func (userRepo *UserRepository) TrxUpdate(tx *gorm.DB, user *models.User) error {
 	result := tx.Model(&user).Updates(user)
 	// Check for errors
 	if result.Error != nil {
@@ -96,7 +90,7 @@ func (userRepo *UserRepository) TrxUpdate(tx *gorm.DB, user *models.User) (error
 func (userRepo *UserRepository) FindByID(id string) (models.User, error) {
 
 	var user models.User
-	result  := userRepo.DB.First(&user, "id = ?", id)
+	result := userRepo.DB.First(&user, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return models.User{}, errors.New("user with id not found")

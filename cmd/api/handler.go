@@ -4,11 +4,16 @@ import (
 	"net/http"
 )
 
-
-func (app *application) healthCheckHandler (w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ping from server"))
+// healthCheckHandler godoc
+// @Summary Health check
+// @Description Get the health status of the server.
+// @Tags Health
+// @Produce  plain
+// @Success 200 {string} string "ping from server"
+// @Router /health [get]
+func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("ping from server"))
 }
-
 
 // func  (app *application) testSendMail(w http.ResponseWriter, r *http.Request) {
 // 	if err := app.sendVerificationEmail("Test email", "Ibmeshach@gmail.com", VerifyEmailPayload{

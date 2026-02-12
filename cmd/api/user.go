@@ -5,33 +5,56 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/Abrahamosaz/TMND/internal/services"
-	"github.com/Abrahamosaz/TMND/internal/utils"
 	"github.com/go-chi/chi/v5"
+	"github.com/thexovc/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/services"
+	"github.com/thexovc/TMND/internal/utils"
 )
 
-
-
-func (app  *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
+// getUserHandler godoc
+// @Summary Get user details
+// @Description Retrieve the details of the currently authenticated user.
+// @Tags User
+// @Produce  json
+// @Security ApiKeyAuth
+// @Success 200 {object} Response{data=models.User} "User details retrieved successfully"
+// @Failure 401 {object} Response "Unauthorized"
+// @Router /user/get-user [get]
+func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := app.GetUserFromContext(r)
 
 	if !ok {
-		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		app.responseJSON(http.StatusUnauthorized, w, "Unauthorized: No user found", nil)
 		return
 	}
 	app.responseJSON(http.StatusOK, w, "User details retrieve successfully", user)
 
 }
 
-
+// editUserProfileHandler godoc
+// @Summary Edit user profile
+// @Description Update the profile details of the currently authenticated user.
+// @Tags User
+// @Accept multipart/form-data
+// @Produce  json
+// @Security ApiKeyAuth
+// @Param fullName formData string false "Full Name"
+// @Param phoneNumber formData string false "Phone Number"
+// @Param address formData string false "Address"
+// @Param state formData string false "State"
+// @Param lga formData string false "LGA"
+// @Param profile-image formData file false "Profile Image"
+// @Success 200 {object} Response "User profile updated successfully"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /user/edit-profile [put]
 func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := app.GetUserFromContext(r)
 
 	if !ok {
-		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		app.responseJSON(http.StatusUnauthorized, w, "Unauthorized: No user found", nil)
 		return
 	}
 
@@ -42,16 +65,16 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		log.Printf("Error parsing form")
-		app.responseJSON(http.StatusInternalServerError, w,  "internal server error", nil)
+		app.responseJSON(http.StatusInternalServerError, w, "internal server error", nil)
 		return
 	}
 
 	editProfile := services.EditProfile{
-		FullName: r.FormValue("fullName"),
+		FullName:    r.FormValue("fullName"),
 		PhoneNumber: r.FormValue("phoneNumber"),
-		Address: utils.StringToPtr(r.FormValue("address")),
-		State:  utils.StringToPtr(r.FormValue("state")),
-		Lga: utils.StringToPtr(r.FormValue("lga")),
+		Address:     utils.StringToPtr(r.FormValue("address")),
+		State:       utils.StringToPtr(r.FormValue("state")),
+		Lga:         utils.StringToPtr(r.FormValue("lga")),
 	}
 
 	err = validate.Struct(editProfile)
@@ -86,13 +109,11 @@ func (app *application) editUserProfileHandler(w http.ResponseWriter, r *http.Re
 	app.responseJSON(statusCode, w, "User profile updated successfully", nil)
 }
 
-
-
 func (app *application) getUserTransactionHandler(w http.ResponseWriter, r *http.Request) {
 	user, ok := app.GetUserFromContext(r)
 
 	if !ok {
-		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		app.responseJSON(http.StatusUnauthorized, w, "Unauthorized: No user found", nil)
 		return
 	}
 
@@ -103,7 +124,7 @@ func (app *application) getUserTransactionHandler(w http.ResponseWriter, r *http
 	if page == "" {
 		page = "1"
 	}
-	
+
 	limit := qs.Get("limit")
 	if limit == "" {
 		limit = "10"
@@ -128,7 +149,6 @@ func (app *application) getUserTransactionHandler(w http.ResponseWriter, r *http
 
 }
 
-
 func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Request) {
 
 	var fundAccount services.FundAccount
@@ -150,7 +170,7 @@ func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Requ
 	user, ok := app.GetUserFromContext(r)
 
 	if !ok {
-		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		app.responseJSON(http.StatusUnauthorized, w, "Unauthorized: No user found", nil)
 		return
 	}
 
@@ -168,9 +188,8 @@ func (app *application) createInvoiceHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	app.responseJSON(statusCode, w, "Invoice created successfully", result)
-	
-}
 
+}
 
 func (app *application) confirmPaymentHandler(w http.ResponseWriter, r *http.Request) {
 	paymentReference := chi.URLParam(r, "paymentReference")
@@ -178,7 +197,7 @@ func (app *application) confirmPaymentHandler(w http.ResponseWriter, r *http.Req
 	user, ok := app.GetUserFromContext(r)
 
 	if !ok {
-		app.responseJSON(http.StatusUnauthorized, w,  "Unauthorized: No user found", nil)
+		app.responseJSON(http.StatusUnauthorized, w, "Unauthorized: No user found", nil)
 		return
 	}
 

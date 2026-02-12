@@ -6,15 +6,21 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Abrahamosaz/TMND/internal/db"
-	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/Abrahamosaz/TMND/internal/services"
-	"github.com/Abrahamosaz/TMND/internal/store"
-	"github.com/Abrahamosaz/TMND/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/resend/resend-go/v3"
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/thexovc/TMND/docs"
+	"github.com/thexovc/TMND/internal/db"
+	"github.com/thexovc/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/services"
+	"github.com/thexovc/TMND/internal/store"
+	"github.com/thexovc/TMND/internal/utils"
 )
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 
 type application struct {
 	config   config
@@ -56,6 +62,9 @@ func (app *application) mount() http.Handler {
 
 	// health check
 	router.Route("/api/v1", func(rootRouter chi.Router) {
+		rootRouter.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:8080/api/v1/swagger/doc.json"), //The url pointing to API definition
+		))
 		rootRouter.Get("/health", app.healthCheckHandler)
 		// rootRouter.Get("/send-email", app.testSendMail)
 

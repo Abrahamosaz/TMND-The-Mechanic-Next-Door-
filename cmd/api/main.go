@@ -5,14 +5,28 @@ import (
 	"log"
 	"os"
 
-	"github.com/Abrahamosaz/TMND/internal/db"
-	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/Abrahamosaz/TMND/internal/services"
-	"github.com/Abrahamosaz/TMND/internal/store"
 	"github.com/joho/godotenv"
 	"github.com/resend/resend-go/v3"
+	"github.com/thexovc/TMND/internal/db"
+	"github.com/thexovc/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/services"
+	"github.com/thexovc/TMND/internal/store"
 )
 
+// @title TMND API
+// @version 1.0
+// @description This is the backend API for The Mechanic Next Door (TMND).
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Daniel Osariemen
+// @contact.url http://github.com/thexovc
+// @contact.email osazeepeter79@gmail.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	// Load environment variables from .env file
 	err := godotenv.Load()

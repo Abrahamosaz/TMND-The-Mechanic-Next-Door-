@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Abrahamosaz/TMND/internal/models"
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/thexovc/TMND/internal/models"
 )
 
 type UploadResult struct {
@@ -20,13 +20,12 @@ type UploadResult struct {
 }
 
 type CloudinaryUploadParams struct {
-	Ctx context.Context
-	File multipart.File
+	Ctx        context.Context
+	File       multipart.File
 	FileHeader *multipart.FileHeader
-	Folder string
-	User *models.User
+	Folder     string
+	User       *models.User
 }
-
 
 type Cloudinary struct {
 	URL string
@@ -36,7 +35,6 @@ var CLOUDINARY_PROFILE_IMAGE_FOLDER = "TMND/profilePictures"
 var CLOUDINARY_VEHICLE_IMAGE_FOLDER = "TMND/vehicleImages"
 var CLOUDINARY_ALLOWED_FORMATS = []string{"jpg", "jpeg", "png", "webp"}
 var CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION = "w_500,h_500,c_limit,q_auto"
-
 
 func (c *Cloudinary) UploadFileToCloudinary(params *CloudinaryUploadParams) (*UploadResult, error) {
 	cloudinaryUrl := c.URL
@@ -56,8 +54,8 @@ func (c *Cloudinary) UploadFileToCloudinary(params *CloudinaryUploadParams) (*Up
 	// Create PublicID as "<timestamp>_<filename-without-ext>"
 	publicID := fmt.Sprintf("%d_%s", timestamp, fileName)
 	uploadResult, err := cld.Upload.Upload(params.Ctx, params.File, uploader.UploadParams{
-		PublicID:      publicID,
-		Folder:        fmt.Sprintf("%s/%s", params.Folder, params.User.ID),
+		PublicID:       publicID,
+		Folder:         fmt.Sprintf("%s/%s", params.Folder, params.User.ID),
 		AllowedFormats: CLOUDINARY_ALLOWED_FORMATS,
 		Transformation: CLOUDINARY_PROFILE_PICTURE_TRANSFORMATION,
 	})
@@ -72,7 +70,6 @@ func (c *Cloudinary) UploadFileToCloudinary(params *CloudinaryUploadParams) (*Up
 	}, nil
 }
 
-	
 func (c *Cloudinary) DeleteFileFromCloudinary(publicID string) (*uploader.DestroyResult, error) {
 	cloudinaryUrl := c.URL
 	cld, err := cloudinary.NewFromURL(cloudinaryUrl)

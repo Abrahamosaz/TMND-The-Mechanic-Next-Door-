@@ -5,12 +5,24 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Abrahamosaz/TMND/internal/services"
 	"github.com/go-playground/validator/v10"
+	"github.com/thexovc/TMND/internal/services"
 )
 
 var validate = validator.New(validator.WithRequiredStructEnabled())
 
+// userSignupHandler godoc
+// @Summary User signup
+// @Description Sign up a new user with full name, email, phone number, and password.
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param signup body services.Signup true "Signup details"
+// @Success 200 {object} Response{data=models.User} "User created successfully"
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "User already exists"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /auth/signup [post]
 func (app *application) userSignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	var signUpDto services.Signup
@@ -46,6 +58,18 @@ func (app *application) userSignupHandler(w http.ResponseWriter, r *http.Request
 	app.responseJSON(statusCode, w, "USer created successfully", user)
 }
 
+// userLoginHandler godoc
+// @Summary User login
+// @Description Login a user with email and password.
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param login body services.Login true "Login details"
+// @Success 200 {object} Response "User login successfully"
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /auth/login [post]
 func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var loginDto services.Login
@@ -114,6 +138,18 @@ func (app *application) mechanicLoginHandler(w http.ResponseWriter, r *http.Requ
 	app.responseJSON(statusCode, w, "Mechanic login successfully", nil)
 }
 
+// forgotPasswordHandler godoc
+// @Summary Forgot password
+// @Description Send a password reset OTP to the user's email.
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param forgotPassword body services.Email true "User email"
+// @Success 200 {object} Response "Password reset OTP sent to your email."
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /auth/forgot-password [post]
 func (app *application) forgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	var forgotPasswordDto services.Email

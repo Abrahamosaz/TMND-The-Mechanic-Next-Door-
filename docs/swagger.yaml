@@ -1,0 +1,517 @@
+basePath: /api/v1
+definitions:
+  main.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      statusCode:
+        type: integer
+    type: object
+  models.Booking:
+    properties:
+      address:
+        type: string
+      bookingDate:
+        type: string
+      bookingFee:
+        type: number
+      createdAt:
+        type: string
+      errorMessage:
+        type: string
+      estimatedPrice:
+        type: number
+      id:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      mechanic:
+        $ref: '#/definitions/models.Mechanic'
+      mechanicId:
+        type: string
+      paymentRef:
+        type: string
+      serviceDescription:
+        type: string
+      serviceType:
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/models.Service'
+        type: array
+      status:
+        $ref: '#/definitions/models.BookingStatus'
+      updatedAt:
+        type: string
+      userId:
+        type: string
+      vehicle:
+        allOf:
+        - $ref: '#/definitions/models.Vehicle'
+        description: relationships
+      vehicleId:
+        type: string
+      vehicleImagesUrl:
+        items:
+          type: integer
+        type: array
+    type: object
+  models.BookingStatus:
+    enum:
+    - pending
+    - booked
+    - cancelled
+    - completed
+    type: string
+    x-enum-varnames:
+    - BookingPending
+    - BookingBooked
+    - BookingCancelled
+    - BookingCompleted
+  models.Mechanic:
+    properties:
+      address:
+        type: string
+      balance:
+        type: number
+      bookings:
+        description: relationships
+        items:
+          $ref: '#/definitions/models.Booking'
+        type: array
+      createdAt:
+        type: string
+      email:
+        type: string
+      experience:
+        description: years of experience
+        type: integer
+      fullName:
+        type: string
+      id:
+        type: string
+      isAvailable:
+        type: boolean
+      isEmailVerified:
+        type: boolean
+      lga:
+        type: string
+      phoneNumber:
+        type: string
+      profileFileName:
+        type: string
+      profileImageUrl:
+        type: string
+      rating:
+        type: number
+      specialty:
+        type: string
+      state:
+        type: string
+      transactions:
+        items:
+          $ref: '#/definitions/models.Transaction'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  models.Service:
+    properties:
+      basePrice:
+        type: number
+      bookings:
+        items:
+          $ref: '#/definitions/models.Booking'
+        type: array
+      createdAt:
+        type: string
+      description:
+        type: string
+      difficulty:
+        $ref: '#/definitions/models.ServiceDifficulty'
+      duration:
+        type: integer
+      id:
+        type: string
+      isAvailable:
+        type: boolean
+      name:
+        type: string
+      serviceCategoryId:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.ServiceDifficulty:
+    enum:
+    - Easy
+    - Medium
+    - Hard
+    type: string
+    x-enum-varnames:
+    - Easy
+    - Medium
+    - Hard
+  models.Transaction:
+    properties:
+      amount:
+        type: number
+      createdAt:
+        type: string
+      currentBalance:
+        type: number
+      description:
+        type: string
+      id:
+        type: string
+      mechanic:
+        $ref: '#/definitions/models.Mechanic'
+      mechanicId:
+        type: string
+      previousBalance:
+        type: number
+      status:
+        $ref: '#/definitions/models.TrasactionStatus'
+      trxRef:
+        type: string
+      type:
+        $ref: '#/definitions/models.TransactionType'
+      updatedAt:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: relationships
+      userId:
+        type: string
+    type: object
+  models.TransactionType:
+    enum:
+    - debit
+    - credit
+    type: string
+    x-enum-varnames:
+    - TransactionTypeDebit
+    - TransactionTypeCredit
+  models.TrasactionStatus:
+    enum:
+    - pending
+    - failed
+    - success
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusFailed
+    - StatusSuccess
+  models.User:
+    properties:
+      address:
+        type: string
+      balance:
+        type: number
+      bookings:
+        description: relationships
+        items:
+          $ref: '#/definitions/models.Booking'
+        type: array
+      createdAt:
+        type: string
+      email:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      isEmailVerified:
+        type: boolean
+      lga:
+        type: string
+      phoneNumber:
+        type: string
+      profileFileName:
+        type: string
+      profileImageUrl:
+        type: string
+      registerWithGoogle:
+        type: boolean
+      state:
+        type: string
+      transactions:
+        items:
+          $ref: '#/definitions/models.Transaction'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  models.Vehicle:
+    properties:
+      brand:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      model:
+        type: integer
+      size:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  services.Email:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  services.Login:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  services.Signup:
+    properties:
+      confirmPassword:
+        minLength: 8
+        type: string
+      email:
+        type: string
+      fullName:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phoneNumber:
+        maxLength: 11
+        minLength: 11
+        type: string
+      registerWithGoogle:
+        type: boolean
+    required:
+    - confirmPassword
+    - email
+    - fullName
+    - password
+    - phoneNumber
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: osazeepeter79@gmail.com
+    name: Daniel Osariemen
+    url: http://github.com/thexovc
+  description: This is the backend API for The Mechanic Next Door (TMND).
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: TMND API
+  version: "1.0"
+paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send a password reset OTP to the user's email.
+      parameters:
+      - description: User email
+        in: body
+        name: forgotPassword
+        required: true
+        schema:
+          $ref: '#/definitions/services.Email'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset OTP sent to your email.
+          schema:
+            $ref: '#/definitions/main.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Forgot password
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user with email and password.
+      parameters:
+      - description: Login details
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/services.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User login successfully
+          schema:
+            $ref: '#/definitions/main.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User login
+      tags:
+      - Auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Sign up a new user with full name, email, phone number, and password.
+      parameters:
+      - description: Signup details
+        in: body
+        name: signup
+        required: true
+        schema:
+          $ref: '#/definitions/services.Signup'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/main.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: User already exists
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User signup
+      tags:
+      - Auth
+  /health:
+    get:
+      description: Get the health status of the server.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: ping from server
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - Health
+  /user/edit-profile:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the profile details of the currently authenticated user.
+      parameters:
+      - description: Full Name
+        in: formData
+        name: fullName
+        type: string
+      - description: Phone Number
+        in: formData
+        name: phoneNumber
+        type: string
+      - description: Address
+        in: formData
+        name: address
+        type: string
+      - description: State
+        in: formData
+        name: state
+        type: string
+      - description: LGA
+        in: formData
+        name: lga
+        type: string
+      - description: Profile Image
+        in: formData
+        name: profile-image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile updated successfully
+          schema:
+            $ref: '#/definitions/main.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Edit user profile
+      tags:
+      - User
+  /user/get-user:
+    get:
+      description: Retrieve the details of the currently authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/main.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user details
+      tags:
+      - User
+swagger: "2.0"

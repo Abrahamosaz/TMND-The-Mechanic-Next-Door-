@@ -3,20 +3,17 @@ package postgres
 import (
 	"errors"
 
-	"github.com/Abrahamosaz/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/models"
 	"gorm.io/gorm"
 )
-
-
 
 type MechanicRepository struct {
 	DB *gorm.DB
 }
 
-
 func (mechanicRepo *MechanicRepository) FindByEmail(email string) (models.Mechanic, error) {
 	var mechanic models.Mechanic
-	result := mechanicRepo.DB.Where("email = ?", email).First(&mechanic) 
+	result := mechanicRepo.DB.Where("email = ?", email).First(&mechanic)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -27,20 +24,17 @@ func (mechanicRepo *MechanicRepository) FindByEmail(email string) (models.Mechan
 	return mechanic, nil
 }
 
-
 func (mechanicRepo *MechanicRepository) Create(tx *gorm.DB, mechanic models.Mechanic) (models.Mechanic, error) {
 	return models.Mechanic{}, nil
 }
 
-
-func (mechanicRepo *MechanicRepository) Save(mechanic *models.Mechanic) (error) {
+func (mechanicRepo *MechanicRepository) Save(mechanic *models.Mechanic) error {
 	result := mechanicRepo.DB.Save(&mechanic)
 	if result.Error != nil {
 		return result.Error // Return the error if save failed
 	}
 	return nil
 }
-
 
 func (mechanicRepo *MechanicRepository) GetAllAvailableMechanics() (*[]models.Mechanic, error) {
 	var mechanics []models.Mechanic
@@ -56,14 +50,12 @@ func (mechanicRepo *MechanicRepository) GetAllAvailableMechanics() (*[]models.Me
 	return &mechanics, nil
 }
 
-
 func (mechanicRepo *MechanicRepository) GetAvailableMechanic(blackListedIDS []string, visitedIDS []string) (*models.Mechanic, error) {
 	var mechanic models.Mechanic
 	var highestRating float64
 
 	query := mechanicRepo.DB.Model(&models.Mechanic{}).
 		Where("is_available = ?", true)
-
 
 	if len(visitedIDS) > 0 {
 		query = query.Where("id NOT IN ?", visitedIDS)

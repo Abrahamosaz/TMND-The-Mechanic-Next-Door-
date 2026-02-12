@@ -1,32 +1,28 @@
 package postgres
 
 import (
-	"github.com/Abrahamosaz/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/models"
 	"gorm.io/gorm"
 )
-
 
 type TransactionRepository struct {
 	DB *gorm.DB
 }
 
+func (trxRepo *TransactionRepository) Create(tx *gorm.DB, trx *models.Transaction) error {
 
-func (trxRepo *TransactionRepository) Create(tx *gorm.DB,  trx *models.Transaction) (error) {
-
-	if  err := tx.Create(trx).Error; err != nil {
-		return err
-	}
-	return  nil
-}
-
-
-func (trxRepo *TransactionRepository) Update(tx *gorm.DB, trx *models.Transaction) (error) {
-	if err := tx.Model(&models.Transaction{}).Where("id = ?", trx.ID).Updates(trx).Error; err != nil {
+	if err := tx.Create(trx).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
+func (trxRepo *TransactionRepository) Update(tx *gorm.DB, trx *models.Transaction) error {
+	if err := tx.Model(&models.Transaction{}).Where("id = ?", trx.ID).Updates(trx).Error; err != nil {
+		return err
+	}
+	return nil
+}
 
 func (trxRepo *TransactionRepository) GetTransactionByTrxRef(trxRef string) (*models.Transaction, error) {
 	var trx models.Transaction
@@ -36,20 +32,18 @@ func (trxRepo *TransactionRepository) GetTransactionByTrxRef(trxRef string) (*mo
 	return &trx, nil
 }
 
-
 func (trxRepo *TransactionRepository) GetUserTransactions(user *models.User, pgQuery *models.PaginationQuery) (*models.PaginationResponse[models.Transaction], error) {
 	var transactions []models.Transaction
 	var total int64
 
 	query := trxRepo.DB.Model(&models.Transaction{}).Where("user_id = ?", user.ID).Order("created_at DESC")
-	
+
 	// Count total records
 	if err := query.Count(&total).Error; err != nil {
 		return nil, err
 	}
 
-	
-	if (pgQuery.Limit != nil && pgQuery != nil) {
+	if pgQuery.Limit != nil && pgQuery != nil {
 		//handle pagination if the page and limt is null
 		offset := (*pgQuery.Page - 1) * *pgQuery.Limit
 		result := query.Limit(*pgQuery.Limit).Offset(offset).Find(&transactions)

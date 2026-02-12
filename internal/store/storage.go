@@ -1,15 +1,14 @@
 package store
 
 import (
-	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/Abrahamosaz/TMND/internal/store/postgres"
+	"github.com/thexovc/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/store/postgres"
 	"gorm.io/gorm"
 )
 
-
 type Storage struct {
 	BeginTransaction func() *gorm.DB
-	User interface {
+	User             interface {
 		Create(*gorm.DB, models.User) (models.User, error)
 		FindByEmail(string) (models.User, error)
 		FindByID(string) (models.User, error)
@@ -35,7 +34,7 @@ type Storage struct {
 	}
 	Service interface {
 		GetServiceCategories() (*[]models.ServiceCategory, error)
-		GetService(*models.Service) (error)
+		GetService(*models.Service) error
 	}
 	Transaction interface {
 		Create(*gorm.DB, *models.Transaction) error
@@ -48,17 +47,16 @@ type Storage struct {
 	}
 }
 
-
 func PostgresStorage(db *gorm.DB) Storage {
-	return Storage {
+	return Storage{
 		BeginTransaction: func() *gorm.DB {
 			return db.Begin()
 		},
-		User: &postgres.UserRepository{DB: db},
-		Mechanic: &postgres.MechanicRepository{DB: db},
-		Booking: &postgres.BookingRepository{DB: db},
-		Service: &postgres.ServiceRepository{DB: db},
+		User:        &postgres.UserRepository{DB: db},
+		Mechanic:    &postgres.MechanicRepository{DB: db},
+		Booking:     &postgres.BookingRepository{DB: db},
+		Service:     &postgres.ServiceRepository{DB: db},
 		Transaction: &postgres.TransactionRepository{DB: db},
-		Vehicle: &postgres.VehicleRepository{DB: db},
+		Vehicle:     &postgres.VehicleRepository{DB: db},
 	}
 }

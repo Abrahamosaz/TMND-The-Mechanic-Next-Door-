@@ -3,8 +3,8 @@ package services
 import (
 	"log"
 
-	"github.com/Abrahamosaz/TMND/internal/templates"
 	"github.com/resend/resend-go/v3"
+	"github.com/thexovc/TMND/internal/templates"
 )
 
 type OtpEmailPayload struct {

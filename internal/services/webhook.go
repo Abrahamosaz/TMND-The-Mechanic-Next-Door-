@@ -6,10 +6,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Abrahamosaz/TMND/internal/models"
-	"github.com/Abrahamosaz/TMND/internal/providers"
+	"github.com/thexovc/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/providers"
 )
-
 
 func (app *Application) HandleMonnifyWebhook(eventData map[string]any) error {
 
@@ -29,19 +28,17 @@ func (app *Application) HandleMonnifyWebhook(eventData map[string]any) error {
 	}
 }
 
-
-
 func (app *Application) handleSuccessfulTransaction(eventData map[string]any) error {
 	paymentReference := eventData["paymentReference"].(string)
 	settlementAmount, err := strconv.ParseFloat(eventData["settlementAmount"].(string), 64)
 	if err != nil {
 		return fmt.Errorf("invalid settlement amount: %w", err)
 	}
-	
+
 	// confirm transaction reference
 	m := providers.Monnify{
-		Url: os.Getenv("MONNIFY_BASE_URL"),
-		ApiKey: os.Getenv("MONNIFY_API_KEY"),
+		Url:       os.Getenv("MONNIFY_BASE_URL"),
+		ApiKey:    os.Getenv("MONNIFY_API_KEY"),
 		SecretKey: os.Getenv("MONNIFY_SECRET_KEY"),
 	}
 
@@ -69,13 +66,11 @@ func (app *Application) handleSuccessfulTransaction(eventData map[string]any) er
 
 	newBalance := user.Balance + settlementAmount
 	fee := pendingTrx.Amount - settlementAmount
-	
 
 	// update transaction
 	pendingTrx.Fee = &fee
 	pendingTrx.Status = models.StatusSuccess
 	pendingTrx.CurrentBalance = newBalance
-
 
 	// update user balance
 	user.Balance = newBalance
@@ -88,7 +83,7 @@ func (app *Application) handleSuccessfulTransaction(eventData map[string]any) er
 		trx.Rollback()
 		return err
 	}
-	
+
 	err = app.UpdateUserTrx(trx, &user)
 
 	if err != nil {
@@ -97,5 +92,5 @@ func (app *Application) handleSuccessfulTransaction(eventData map[string]any) er
 	}
 
 	trx.Commit()
-	return nil	
+	return nil
 }

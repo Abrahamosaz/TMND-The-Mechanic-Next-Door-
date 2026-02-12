@@ -1,16 +1,13 @@
 package postgres
 
 import (
-	"github.com/Abrahamosaz/TMND/internal/models"
+	"github.com/thexovc/TMND/internal/models"
 	"gorm.io/gorm"
 )
-
-
 
 type ServiceRepository struct {
 	DB *gorm.DB
 }
-
 
 func (serviceRepo *ServiceRepository) GetServiceCategories() (*[]models.ServiceCategory, error) {
 	var services []models.ServiceCategory
@@ -22,11 +19,9 @@ func (serviceRepo *ServiceRepository) GetServiceCategories() (*[]models.ServiceC
 	return &services, nil
 }
 
-
-
 func (serviceRepo *ServiceRepository) GetService(service *models.Service) error {
 	if err := serviceRepo.DB.First(service).Error; err != nil {
 		return err
 	}
 	return nil
-} 
+}
